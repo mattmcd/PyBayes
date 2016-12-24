@@ -16,6 +16,8 @@ transformed parameters {
 }
 model {
     vector[N] y_pred;
+    log_a ~ normal(0, 1);
+    log_b ~ normal(0, 1);
     y_pred = a[1]*exp(-b[1]*x) + a[2]*exp(-b[2]*x);
     y ~ lognormal(log(y_pred), sigma);
 }

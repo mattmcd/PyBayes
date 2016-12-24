@@ -1,5 +1,6 @@
 import pystan
 import numpy as np
+import pandas as pd
 import os
 import pickle
 
@@ -9,42 +10,94 @@ import pickle
 #  Bayesian inference and optimization" Gelman, Lee, Guo (2015)
 # http://www.stat.columbia.edu/~gelman/research/published/stan_jebs_2.pdf
 
-model_file = 'two_compartment.stan'
-pkl_file = 'two_compartment.pkl'
 
-a = np.array([0.8, 1.0])
-b = np.array([2, 0.1])
-sigma = 0.2
+class TwoCompartmentModel(object):
+    def __init__(self):
+        self.model_file = 'two_compartment.stan'
+        self.pkl_file = 'two_compartment.pkl'
 
-x = np.arange(0, 1000, dtype='float')/100
-N = len(x)
+    @staticmethod
+    def generate_data():
+        a = np.array([0.8, 1.0])
+        b = np.array([2, 0.1])
+        sigma = 0.2
 
-# The two compartment model we are attempting to fit
-y_pred = a[0]*np.exp(-b[0]*x) + a[1]*np.exp(-b[1]*x)
+        x = np.arange(0, 1000, dtype='float')/100
+        N = len(x)
 
-# Include multiplicative noise
-y = y_pred * np.exp(np.random.normal(0, sigma, N))
+        # The two compartment model we are attempting to fit
+        y_pred = a[0]*np.exp(-b[0]*x) + a[1]*np.exp(-b[1]*x)
 
-if os.path.isfile(pkl_file):
-    # Reuse previously compiled model
-    sm = pickle.load(open(pkl_file, 'rb'))
-else:
-    # Compile and sample model
-    sm = pystan.StanModel(file='two_compartment.stan')
-    with open(pkl_file, 'wb') as f:
-        pickle.dump(sm, f)
+        # Include multiplicative noise
+        y = y_pred * np.exp(np.random.normal(0, sigma, N))
+        return {'N': N, 'x': x, 'y': y}
 
-fit = sm.sampling(data={'N': N, 'x': x, 'y': y},
-                  iter=1000, chains=4)
+    def get_model(self):
+        if os.path.isfile(self.pkl_file):
+            # Reuse previously compiled model
+            sm = pickle.load(open(self.pkl_file, 'rb'))
+        else:
+            # Compile and sample model
+            sm = pystan.StanModel(file=self.model_file)
+            with open(self.pkl_file, 'wb') as f:
+                pickle.dump(sm, f)
+        return sm
 
-# Plot parameter estimates of interest
-fit.plot(pars=['a', 'b', 'sigma'])
+    def fit(self, data):
+        # Sampling of parameters
+        sm = self.get_model()
+        fit = sm.sampling(data=data,
+                          iter=2000, chains=4)
+        return fit
 
-# Print all parameter estimates (limitation of PyStan 2.0)
-print(fit)
+    def optimize(self, data):
+        # Point estimate of parameters
+        sm = self.get_model()
+        optim = sm.optimizing(data=data)
+        return optim
 
-# Extension: Demonstrate reusing compiled model on new data
-y_new = y_pred * np.exp(np.random.normal(0, sigma, N))
-fit2 = pystan.stan(fit=fit, data={'N': N, 'x': x, 'y': y_new})
-fit2.plot(pars=['a', 'b', 'sigma'])
-print(fit2)
+    def vb(self, data):
+        # Variational Bayes
+        sm = self.get_model()
+        try:
+            res = sm.vb(data=data)
+        except ValueError as e:
+            print('Variational Bayes failed:' + e.message)
+            return
+        # Read generated samples
+        # PyStan issue 163 should remove need for this
+        out_file = res['args']['sample_file']
+        names = []
+        with open(out_file, 'r') as f:
+            for ii, line in enumerate(f):
+                if ii == 4:
+                    names = line.strip().split(',')
+                elif ii > 4:
+                    break
+        df = pd.read_csv(out_file, header=7, names=names)
+        return df
+
+    @staticmethod
+    def report_fit(fit):
+        # Plot parameter estimates of interest
+        fit.plot(pars=['a', 'b', 'sigma'])
+
+        # Print all parameter estimates (limitation of PyStan 2.0)
+        print(fit)
+
+
+if __name__ == '__main__':
+    model = TwoCompartmentModel()
+    data = model.generate_data()
+    # Demonstrate sampling
+    print('Sampling')
+    fit = model.fit(data)
+    model.report_fit(fit)
+    # Demonstrate optimizing for point estimate
+    print('Optimizing')
+    optim = model.optimize(data)
+    print(optim)
+    # Demonstrate using variational Bayes
+    print('Variational Bayes')
+    df = model.vb(data)
+    print(df.describe())
