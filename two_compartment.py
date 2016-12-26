@@ -11,26 +11,14 @@ import pickle
 # http://www.stat.columbia.edu/~gelman/research/published/stan_jebs_2.pdf
 
 
-class TwoCompartmentModel(object):
-    def __init__(self):
-        self.model_file = 'two_compartment.stan'
-        self.pkl_file = 'two_compartment.pkl'
+class BayesModel(object):
+    def __init__(self, name=''):
+        self.model_file = name + '.stan'
+        self.pkl_file = name + '.pkl'
 
     @staticmethod
     def generate_data():
-        a = np.array([0.8, 1.0])
-        b = np.array([2, 0.1])
-        sigma = 0.2
-
-        x = np.arange(0, 1000, dtype='float')/100
-        N = len(x)
-
-        # The two compartment model we are attempting to fit
-        y_pred = a[0]*np.exp(-b[0]*x) + a[1]*np.exp(-b[1]*x)
-
-        # Include multiplicative noise
-        y = y_pred * np.exp(np.random.normal(0, sigma, N))
-        return {'N': N, 'x': x, 'y': y}
+        pass
 
     def get_model(self):
         if os.path.isfile(self.pkl_file):
@@ -77,6 +65,27 @@ class TwoCompartmentModel(object):
 
         # Print all parameter estimates (limitation of PyStan 2.0)
         print(fit)
+
+
+class TwoCompartmentModel(BayesModel):
+    def __init__(self):
+        super(TwoCompartmentModel, self).__init__(name='two_compartment')
+
+    @staticmethod
+    def generate_data():
+        a = np.array([0.8, 1.0])
+        b = np.array([2, 0.1])
+        sigma = 0.2
+
+        x = np.arange(0, 1000, dtype='float')/100
+        N = len(x)
+
+        # The two compartment model we are attempting to fit
+        y_pred = a[0]*np.exp(-b[0]*x) + a[1]*np.exp(-b[1]*x)
+
+        # Include multiplicative noise
+        y = y_pred * np.exp(np.random.normal(0, sigma, N))
+        return {'N': N, 'x': x, 'y': y}
 
 
 if __name__ == '__main__':
