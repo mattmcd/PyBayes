@@ -5,19 +5,14 @@ import os
 import pickle
 
 
-# Two compartment model from
-# "Stan: A probabilistic programming language for
-#  Bayesian inference and optimization" Gelman, Lee, Guo (2015)
-# http://www.stat.columbia.edu/~gelman/research/published/stan_jebs_2.pdf
-
-
 class BayesModel(object):
     def __init__(self, name=''):
+        self.name = name
         self.model_file = name + '.stan'
         self.pkl_file = name + '.pkl'
 
     @staticmethod
-    def generate_data():
+    def generate_data(**kwargs):
         pass
 
     def get_model(self):
@@ -26,7 +21,7 @@ class BayesModel(object):
             sm = pickle.load(open(self.pkl_file, 'rb'))
         else:
             # Compile and sample model
-            sm = pystan.StanModel(file=self.model_file)
+            sm = pystan.StanModel(file=self.model_file, model_name=self.name)
             with open(self.pkl_file, 'wb') as f:
                 pickle.dump(sm, f)
         return sm
@@ -59,20 +54,25 @@ class BayesModel(object):
         return df
 
     @staticmethod
-    def report_fit(fit):
+    def report_fit(fit, pars=None):
         # Plot parameter estimates of interest
-        fit.plot(pars=['a', 'b', 'sigma'])
+        fit.plot(pars=pars)
 
         # Print all parameter estimates (limitation of PyStan 2.0)
         print(fit)
 
+
+# Two compartment model from
+# "Stan: A probabilistic programming language for
+#  Bayesian inference and optimization" Gelman, Lee, Guo (2015)
+# http://www.stat.columbia.edu/~gelman/research/published/stan_jebs_2.pdf
 
 class TwoCompartmentModel(BayesModel):
     def __init__(self):
         super(TwoCompartmentModel, self).__init__(name='two_compartment')
 
     @staticmethod
-    def generate_data():
+    def generate_data(**kwargs):
         a = np.array([0.8, 1.0])
         b = np.array([2, 0.1])
         sigma = 0.2
@@ -88,13 +88,38 @@ class TwoCompartmentModel(BayesModel):
         return {'N': N, 'x': x, 'y': y}
 
 
+class BernoulliModel(BayesModel):
+    def __init__(self):
+        super(BernoulliModel, self).__init__('bernoulli')
+
+    @staticmethod
+    def generate_data(N=100, theta=0.5):
+        y = np.random.binomial(1, theta, N)
+        return {'N': N, 'y': y}
+
+
+def get_model_params(name=None):
+    if name == 'twocompartment':
+        model = TwoCompartmentModel()
+        data_args = {}
+        report_args = {'pars': ['a', 'b', 'sigma']}
+    elif name == 'bernoulli':
+        model = BernoulliModel()
+        data_args = {'N': 1000, 'theta': 0.3}
+        report_args = {}
+    else:
+        raise ValueError('Unknown or missing model name')
+    return model, data_args, report_args
+
 if __name__ == '__main__':
-    model = TwoCompartmentModel()
-    data = model.generate_data()
+    name = 'twocompartment'
+    model, data_args, report_args = get_model_params(name=name)
+
+    data = model.generate_data(**data_args)
     # Demonstrate sampling
     print('Sampling')
     fit = model.fit(data)
-    model.report_fit(fit)
+    model.report_fit(fit, **report_args)
     # Demonstrate optimizing for point estimate
     print('Optimizing')
     optim = model.optimize(data)
