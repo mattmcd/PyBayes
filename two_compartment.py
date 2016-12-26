@@ -67,14 +67,7 @@ class TwoCompartmentModel(object):
         # Read generated samples
         # PyStan issue 163 should remove need for this
         out_file = res['args']['sample_file']
-        names = []
-        with open(out_file, 'r') as f:
-            for ii, line in enumerate(f):
-                if ii == 4:
-                    names = line.strip().split(',')
-                elif ii > 4:
-                    break
-        df = pd.read_csv(out_file, header=7, names=names)
+        df = pd.read_csv(out_file, skiprows=[0, 1, 2, 3, 5, 6])
         return df
 
     @staticmethod
