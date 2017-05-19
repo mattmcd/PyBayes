@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 import pickle
+import argparse
 
 
 class BayesModel(object):
@@ -112,19 +113,34 @@ def get_model_params(name=None):
     return model, data_args, report_args
 
 if __name__ == '__main__':
-    name = 'twocompartment'
+    parser = argparse.ArgumentParser(description='Bayesian estimation of model parameters')
+    parser.add_argument('-m', '--model', dest='model', help='Name of model: twocompartment, bernoulli',
+                        action='store', default='twocompartment')
+    parser.add_argument('-a', '--analysis', dest='analysis',
+                        help='Analysis to run: sample, mle, vb (variational Bayes).  Comma separated for multiple.',
+                        action='store', default='mle')
+
+    args = parser.parse_args()
+
+    name = args.model
+    analysis = args.analysis.split(',')
     model, data_args, report_args = get_model_params(name=name)
 
     data = model.generate_data(**data_args)
-    # Demonstrate sampling
-    print('Sampling')
-    fit = model.fit(data)
-    model.report_fit(fit, **report_args)
-    # Demonstrate optimizing for point estimate
-    print('Optimizing')
-    optim = model.optimize(data)
-    print(optim)
-    # Demonstrate using variational Bayes
-    print('Variational Bayes')
-    df = model.vb(data)
-    print(df.describe())
+    if 'sample' in analysis:
+        # Demonstrate sampling
+        print('Sampling')
+        fit = model.fit(data)
+        model.report_fit(fit, **report_args)
+
+    if 'mle' in analysis:
+        # Demonstrate optimizing for point estimate
+        print('Optimizing')
+        optim = model.optimize(data)
+        print(optim)
+
+    if 'vb' in analysis:
+        # Demonstrate using variational Bayes
+        print('Variational Bayes')
+        df = model.vb(data)
+        print(df.describe())
