@@ -4,6 +4,64 @@ import pandas as pd
 import os
 import pickle
 import argparse
+import urllib2
+import zipfile
+
+
+lahman_file = 'baseballdatabank-2017.1.zip'
+
+
+def download_lahman():
+    # Download Lahman baseball statistics dataset for 2016
+    # 2017-05019: latest update Feb 2017
+    lahman_url = 'http://seanlahman.com/files/database/baseballdatabank-2017.1.zip'
+    response = urllib2.urlopen(lahman_url)
+    with open(lahman_file, 'wb') as f:
+        f.write(response.read())
+
+
+def get_lahman_data(name):
+    """Read Lahman baseball data file into Pandas dataframe
+    
+    Args:
+        name: name of file e.g. Batting, Pitching, Master
+
+    Returns:
+        dataframe with file contents
+    """
+    if not os.path.isfile(lahman_file):
+        print('Downloading Lahman baseball statistics data')
+        download_lahman()
+    z = zipfile.ZipFile(lahman_file)
+    df = pd.read_csv(z.extract('baseballdatabank-2017.1/core/{}.csv'.format(name)))
+    return df
+
+
+def get_processed_lahman():
+    """Get processed Lahman batter statistics as used in 'Empirical Bayes' by David Robinson
+    
+    Returns:
+        dataframe of career statistics for batters
+    """
+    df_b = get_lahman_data('Batting')
+    df_p = get_lahman_data('Pitching')
+    df_m = get_lahman_data('Master').set_index('playerID')
+
+    # Career statistics for batters:
+    # - At Bats > 0
+    # - Not in the list of Pitchers
+    # Total number of At Bats (AB) and Hits (H)
+
+    df_c = (df_b[(df_b['AB'] > 0)
+                 & ~df_b['playerID'].isin(df_p['playerID'])
+            ]
+            .groupby('playerID')[['H', 'AB']]
+            .sum())
+    df_c['average'] = df_c['H'] / df_c['AB']
+    # Replace playerID with player name
+    df_c = df_c.join((df_m['nameGiven'] + ' ' + df_m['nameLast']).to_frame(name='name')).reset_index()
+
+    return df_c[['name', 'H', 'AB', 'average']].copy()
 
 
 class BayesModel(object):
@@ -35,7 +93,7 @@ class BayesModel(object):
         return fit
 
     def optimize(self, data):
-        # Point estimate of parameters
+        # Point estimate of parameters using MLE
         sm = self.get_model()
         optim = sm.optimizing(data=data)
         return optim
@@ -67,6 +125,7 @@ class BayesModel(object):
 # "Stan: A probabilistic programming language for
 #  Bayesian inference and optimization" Gelman, Lee, Guo (2015)
 # http://www.stat.columbia.edu/~gelman/research/published/stan_jebs_2.pdf
+# Model in two_compartment.stan
 
 class TwoCompartmentModel(BayesModel):
     def __init__(self):
@@ -89,6 +148,10 @@ class TwoCompartmentModel(BayesModel):
         return {'N': N, 'x': x, 'y': y}
 
 
+# Bernoulli model: given a list of {0,1} results estimate the probability of 1
+# Think of this as a sequence of coin flips from a biased coin
+# Model in bernoulli.stan
+
 class BernoulliModel(BayesModel):
     def __init__(self):
         super(BernoulliModel, self).__init__('bernoulli')
@@ -99,7 +162,32 @@ class BernoulliModel(BayesModel):
         return {'N': N, 'y': y}
 
 
+# Lahman baseball statistics model: estimate population batting average distribution
+# Assume that each player's observed batting average is drawn from a Beta distribution
+# Model in beta.stan
+
+class LahmanModel(BayesModel):
+    def __init__(self):
+        super(LahmanModel, self).__init__('beta')
+
+    @staticmethod
+    def generate_data(**kwargs):
+        # Only consider players with a reasonable history of > 500 At Bats
+        df_c = get_processed_lahman().query('AB > 500')
+        y = df_c['average'].values.tolist()
+        N = len(y)
+        return {'N': N, 'y': y}
+
+
 def get_model_params(name=None):
+    """Factory for Stan models and associated parameters for generating data and reporting
+    
+    Args:
+        name: name of model - one of 'twocompartment', 'bernoulli' or 'lahman'
+
+    Returns:
+        model, data_args, report_args
+    """
     if name == 'twocompartment':
         model = TwoCompartmentModel()
         data_args = {}
@@ -108,9 +196,14 @@ def get_model_params(name=None):
         model = BernoulliModel()
         data_args = {'N': 1000, 'theta': 0.3}
         report_args = {}
+    elif name == 'lahman':
+        model = LahmanModel()
+        data_args = {}
+        report_args = {}
     else:
         raise ValueError('Unknown or missing model name')
     return model, data_args, report_args
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Bayesian estimation of model parameters')
@@ -137,7 +230,8 @@ if __name__ == '__main__':
         # Demonstrate optimizing for point estimate
         print('Optimizing')
         optim = model.optimize(data)
-        print(optim)
+        for k, v in optim.iteritems():
+            print('{}: {}'.format(k, v))
 
     if 'vb' in analysis:
         # Demonstrate using variational Bayes
