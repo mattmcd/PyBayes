@@ -109,7 +109,7 @@ class BayesModel(object):
         # Read generated samples
         # PyStan issue 163 should remove need for this
         out_file = res['args']['sample_file']
-        df = pd.read_csv(out_file, skiprows=[0, 1, 2, 3, 5, 6])
+        df = pd.read_csv(out_file, comment='#')
         return df
 
     @staticmethod
