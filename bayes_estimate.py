@@ -174,9 +174,8 @@ class LahmanModel(BayesModel):
     def generate_data(**kwargs):
         # Only consider players with a reasonable history of > 500 At Bats
         df_c = get_processed_lahman().query('AB > 500')
-        y = df_c['average'].values.tolist()
-        N = len(y)
-        return {'N': N, 'y': y}
+        N = len(df_c)
+        return {'N': N, 'trial': df_c['AB'].values.tolist(), 'success': df_c['H'].values.tolist()}
 
 
 def get_model_params(name=None):
