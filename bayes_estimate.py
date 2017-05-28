@@ -164,14 +164,14 @@ class BernoulliModel(BayesModel):
 
 # Lahman baseball statistics model: estimate population batting average distribution
 # Assume that each player's observed batting average is drawn from a Beta distribution
-# Model in beta.stan
+# Model in beta_binomial.stan
 
 class LahmanModel(BayesModel):
     def __init__(self, version=1):
         if version == 1:
-            super(LahmanModel, self).__init__('beta')
+            super(LahmanModel, self).__init__('beta_binomial')
         else:
-            super(LahmanModel, self).__init__('beta2')
+            super(LahmanModel, self).__init__('beta')
 
     @staticmethod
     def generate_data(**kwargs):
