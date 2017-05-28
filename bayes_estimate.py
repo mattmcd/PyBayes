@@ -167,8 +167,11 @@ class BernoulliModel(BayesModel):
 # Model in beta.stan
 
 class LahmanModel(BayesModel):
-    def __init__(self):
-        super(LahmanModel, self).__init__('beta')
+    def __init__(self, version=1):
+        if version == 1:
+            super(LahmanModel, self).__init__('beta')
+        else:
+            super(LahmanModel, self).__init__('beta2')
 
     @staticmethod
     def generate_data(**kwargs):
@@ -196,7 +199,11 @@ def get_model_params(name=None):
         data_args = {'N': 1000, 'theta': 0.3}
         report_args = {}
     elif name == 'lahman':
-        model = LahmanModel()
+        model = LahmanModel(version=1)
+        data_args = {}
+        report_args = {}
+    elif name == 'lahman2':
+        model = LahmanModel(version=2)
         data_args = {}
         report_args = {}
     else:
