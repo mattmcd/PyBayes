@@ -6,7 +6,7 @@ data {
   int N; //the number of observations
   int N2; //the size of the new_X matrix
   int K; //the number of columns in the model matrix
-  real y[N]; //the response
+  vector[N] y; //the response
   matrix[N,K] X; //the model matrix
   matrix[N2,K] new_X; //the matrix for the predicted values
 }
