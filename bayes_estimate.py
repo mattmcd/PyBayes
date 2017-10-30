@@ -170,8 +170,13 @@ class LahmanModel(BayesModel):
     def __init__(self, version=1):
         if version == 1:
             super(LahmanModel, self).__init__('beta_binomial')
-        else:
+        elif version == 2:
             super(LahmanModel, self).__init__('beta')
+        elif version == 3:
+            super(LahmanModel, self).__init__('beta_binomial_linear')
+        else:
+            raise ValueError('Unknown model version: ' + str(version))
+
 
     @staticmethod
     def generate_data(**kwargs):
@@ -204,6 +209,10 @@ def get_model_params(name=None):
         report_args = {}
     elif name == 'lahman2':
         model = LahmanModel(version=2)
+        data_args = {}
+        report_args = {}
+    elif name == 'lahman3':
+        model = LahmanModel(version=3)
         data_args = {}
         report_args = {}
     else:
