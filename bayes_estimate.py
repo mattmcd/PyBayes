@@ -4,7 +4,7 @@ import pandas as pd
 import os
 import pickle
 import argparse
-import urllib2
+import urllib.request
 import zipfile
 
 
@@ -15,7 +15,7 @@ def download_lahman():
     # Download Lahman baseball statistics dataset for 2016
     # 2017-05019: latest update Feb 2017
     lahman_url = 'http://seanlahman.com/files/database/baseballdatabank-2017.1.zip'
-    response = urllib2.urlopen(lahman_url)
+    response = urllib.request.urlopen(lahman_url)
     with open(lahman_file, 'wb') as f:
         f.write(response.read())
 
@@ -104,7 +104,7 @@ class BayesModel(object):
         try:
             res = sm.vb(data=data)
         except ValueError as e:
-            print('Variational Bayes failed:' + e.message)
+            print('Variational Bayes failed:' + e)
             return
         # Read generated samples
         # PyStan issue 163 should remove need for this
@@ -177,7 +177,6 @@ class LahmanModel(BayesModel):
         else:
             raise ValueError('Unknown model version: ' + str(version))
 
-
     @staticmethod
     def generate_data(**kwargs):
         # Only consider players with a reasonable history of > 500 At Bats
@@ -245,7 +244,7 @@ if __name__ == '__main__':
         # Demonstrate optimizing for point estimate
         print('Optimizing')
         optim = model.optimize(data)
-        for k, v in optim.iteritems():
+        for k, v in optim.items():
             print('{}: {}'.format(k, v))
 
     if 'vb' in analysis:
