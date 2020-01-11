@@ -13,6 +13,10 @@ ipython = "*"
 tensorflow-probability = "*"
 gpflow = "==2.0.0rc1"
 netron = "*"
+pillow = "*"
+opencv-python = "*"
+matplotlib = "*"
+seaborn = "*"
 
 [requires]
 python_version = "3.7"
