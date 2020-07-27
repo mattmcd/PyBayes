@@ -21,9 +21,11 @@ tensorboard = "==2.2.2"
 requests = "==2.23.0"
 tensorflow-estimator = "==2.2.0"
 tensorflow = "==2.2.0"
+tensorflow-datasets = "*"
 jax = "*"
 jaxlib = "*"
 symjax = "*"
+cvxpylayers = "*"
 
 [requires]
 python_version = "3.7"
