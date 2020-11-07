@@ -28,6 +28,9 @@ symjax = "*"
 cvxpylayers = "*"
 oryx = "*"
 quandl = "*"
+xlrd = "*"
+networkx = "*"
+pydot = "*"
 
 [requires]
 python_version = "3.7"
