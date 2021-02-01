@@ -33,6 +33,7 @@ networkx = "*"
 pydot = "*"
 scikit-tda ="*"
 giotto-tda = "*"
+imageio = "*"
 
 [requires]
 python_version = "3.7"
