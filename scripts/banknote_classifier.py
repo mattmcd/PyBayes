@@ -4,9 +4,7 @@ import os
 import logging
 from dataclasses import dataclass
 
-
 logger = logging.getLogger()
-
 
 @dataclass
 class DataReader:
