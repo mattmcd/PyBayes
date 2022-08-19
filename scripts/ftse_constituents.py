@@ -21,6 +21,7 @@ INDEXES = {
     'FTSE AIM All Share': 'ftse-aim-all-share',
 }
 
+ISHARES_US_SECTOR_ETFS = ['IU' + s for s in 'IT HC FS ES CD CS US IS MS CM'.split(' ')]
 
 @dataclass
 class Index:
@@ -113,9 +114,18 @@ def reorder_instruments(df, keep=0.1):
     return df.columns[ind].to_list()
 
 
+def extract_ticker(df_p, ticker):
+    # Get adjusted close and volume date from downloaded price data
+    return df_p.loc(axis=1)[
+        ['Adj Close', 'Volume']
+    ].swaplevel(0, 1, axis=1).loc(axis=1)[ticker].rename(
+        columns={'Adj Close': 'close', 'Volume': 'volume'}
+    )
+
+
 if __name__ == '__main__':
     index_name = 'FTSE 100'
     page = 1
     ftse_100 = Index(name=index_name)
     ftse_100.get()
-    df_p = yf.download(ftse_100.yfinance_tickers(), period='3y', interval='1d').loc[:, 'Adj Close']
+    df_p = yf.download(ftse_100.yfinance_tickers(), period='3y', interval='1d')  # .loc[:, 'Adj Close']
