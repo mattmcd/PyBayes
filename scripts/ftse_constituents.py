@@ -149,6 +149,7 @@ def make_slider(start='2018', end='2023'):
 class TickerHistoryViewer:
     def __init__(self, df):
         self.df = df
+        self.df_c = self.df['Adj Close'].pct_change().rolling('21D').corr().dropna().copy()
 
     def select_date_range(self, date_range):
         return self.df['Adj Close'].loc[
@@ -172,10 +173,33 @@ class TickerHistoryViewer:
         sns.heatmap(df_r.corr(), ax=ax_c, cmap='coolwarm', center=0.)
         plt.tight_layout()
 
+    def plot_corr(self, date_range=None, ref_ticker=None):
+        if date_range is None:
+            date_range = self.df_c.index.get_level_values(0)
+        if ref_ticker is None:
+            ref_ticker = self.df_c.columns[0]
+        start = date_range[0]
+        end = date_range[-1]
+        _ = self.df_c.loc[start:end, :].xs(
+            ref_ticker, level=1
+        ).drop(columns=ref_ticker).plot(
+            kind='hist', alpha=0.8, bins=20, subplots=True, grid=True,
+            figsize=(6, 8), title=f'{ref_ticker} {start.strftime("%Y-%m-%d")} - {end.strftime("%Y-%m-%d")}'
+        )
+
     def interactive(self, start=None, end=None):
         start = start or self.df.index[0]
         end = end or self.df.index[-1]
         return widgets.interact(self.plot, date_range=make_slider(start=start, end=end))
+
+    def interactive_corr(self, start=None, end=None, ref_ticker=None):
+        start = start or self.df_c.index.get_level_values(0)[0]
+        end = end or self.df_c.index.get_level_values(0)[-1]
+        date_slider = make_slider(start=start, end=end)
+        tickers = self.df_c.columns.to_list()
+        ref_ticker = ref_ticker or tickers[0]
+        ticker_chooser = widgets.Dropdown(options=tickers, value=ref_ticker)
+        return widgets.interact(self.plot_corr, date_range=date_slider, ref_ticker=ticker_chooser)
 
 
 if __name__ == '__main__':
