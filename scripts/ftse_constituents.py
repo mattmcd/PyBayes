@@ -9,7 +9,11 @@ import yfinance as yf
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import reverse_cuthill_mckee
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import seaborn as sns
+import ipywidgets as widgets
+
+
 
 INDEXES = {
     'FTSE 100': 'ftse-100',
@@ -121,6 +125,57 @@ def extract_ticker(df_p, ticker):
     ].swaplevel(0, 1, axis=1).loc(axis=1)[ticker].rename(
         columns={'Adj Close': 'close', 'Volume': 'volume'}
     )
+
+
+def get_sector_history(sectors=None, **kwargs):
+    sectors = sectors or [t + '.L' for t in ISHARES_US_SECTOR_ETFS]
+    return yf.download(sectors, **kwargs)
+
+
+def make_slider(start='2018', end='2023'):
+    dates = pd.date_range(start, end, freq='D')
+    # Slider definition
+    # options = dates.to_list()  # First attempt: raw datetime object.  Works but can't see end date
+    options = [(d.strftime('%Y%m%d'), d) for d in dates]  # Second attempt: (label, item) list with date format
+    opt_index = (0, len(options)-1)
+    slider = widgets.SelectionRangeSlider(
+        index=opt_index,
+        options=options,
+        layout={'width': '500px'}
+    )
+    return slider
+
+
+class TickerHistoryViewer:
+    def __init__(self, df):
+        self.df = df
+
+    def select_date_range(self, date_range):
+        return self.df['Adj Close'].loc[
+               date_range[0]:date_range[-1], :
+               ]
+
+    def plot(self, date_range):
+        fig = plt.figure(figsize=(10, 6))
+        gs = mpl.gridspec.GridSpec(nrows=2, ncols=3, figure=fig)
+        ax = fig.add_subplot(gs[0:2, 0:2])
+        date_range = date_range if (date_range is not None) else df_p.index
+        df_r = self.select_date_range(date_range).pct_change().fillna(0)
+        df_r.rename(
+            columns={c: c.replace('.L', '') for c in df_r.columns},
+            inplace=True
+        )
+        df_n = (1 + df_r).cumprod()
+        df_n.plot(ax=ax)
+        # Add correlation plot
+        ax_c = fig.add_subplot(gs[2])
+        sns.heatmap(df_r.corr(), ax=ax_c, cmap='coolwarm', center=0.)
+        plt.tight_layout()
+
+    def interactive(self, start=None, end=None):
+        start = start or self.df.index[0]
+        end = end or self.df.index[-1]
+        return widgets.interact(self.plot, date_range=make_slider(start=start, end=end))
 
 
 if __name__ == '__main__':
