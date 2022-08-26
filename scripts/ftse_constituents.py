@@ -14,7 +14,7 @@ import seaborn as sns
 import ipywidgets as widgets
 
 
-
+DATA_DIR = os.environ.get('DATA_DIR', os.path.expanduser('~/Work/Data/'))
 INDEXES = {
     'FTSE 100': 'ftse-100',
     'FTSE 250': 'ftse-250',
@@ -33,7 +33,7 @@ class Index:
     code: str = field(init=False)
     constituents: pd.DataFrame = field(init=False)
     use_cache: bool = True
-    cache_dir: str = os.path.expanduser('~/Work/Data/')
+    cache_dir: str = DATA_DIR
 
     def __post_init__(self):
         self.code = INDEXES[self.name]
