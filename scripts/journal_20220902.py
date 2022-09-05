@@ -18,6 +18,7 @@ tfk = tfp.math.psd_kernels
 import cvxpy as cp
 import cvxpylayers.jax as cpl
 import tensorflow as tf
+import functools
 
 
 # Define the model
@@ -166,6 +167,21 @@ class CnnParams:
         bytes_output = serialization.to_bytes(self.params)
         with open(fname, 'wb') as f:
             f.write(bytes_output)
+
+    def predict(self, x):
+        cnn = CNN()
+        return jnp.argmax(cnn.apply({'params': self.params}, x), axis=1)
+
+    def to_tflite(self, fname):
+        serving_fn = self.predict  # functools.partial(self.predict, self.params)
+        x_input = jnp.zeros((1, 28, 28, 1))  # BHWC
+        converter = tf.lite.TFLiteConverter.experimental_from_jax(
+            [serving_fn], [[('input1', x_input)]]
+        )
+        tflite_model = converter.convert()
+        with open(fname, 'wb') as f:
+            f.write(tflite_model)
+        return converter
 
     @classmethod
     def from_file(cls, fname):
