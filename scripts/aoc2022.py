@@ -21,6 +21,7 @@ def day_01():
     )[::-1]
     return vals[0], sum(vals[:3])
 
+
 class Day01:
     def __init__(self):
         self.input = read_input(1)
@@ -51,12 +52,13 @@ class Day01:
     def __repr__(self):
         return f'Part 1: {self.part1()}\nPart 2: {self.part2()}'
 
+
 class Day01Pandas(Day01):
     def __init__(self):
         super(Day01Pandas, self).__init__()
-        self.inventory = self.parse_pandas()
+        self.inventory: pd.DataFrame = self.parse_pandas()
 
-    def parse_pandas(self):
+    def parse_pandas(self) -> pd.DataFrame:
         inventory = Day01.parse(self)
         # Not part of puzzle but an alternative representation
         n_elves = len(inventory)
@@ -84,7 +86,7 @@ class Day01Sqla(Day01Pandas):
         try:
             tb_inventory = Table('Day01', self.metadata, autoload=True, autoload_with=self.engine)
         except NoSuchTableError:
-            inventory = self.inventory
+            inventory = self.inventory  # pd.DataFrame from parent class
             inventory.to_sql('Day01', self.engine, if_exists='fail', index=False)
             tb_inventory = Table('Day01', self.metadata, autoload=True, autoload_with=self.engine)
         return tb_inventory
