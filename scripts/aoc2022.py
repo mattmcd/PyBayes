@@ -81,17 +81,18 @@ class Day01Sqla(Day01Pandas):
             tb_inventory = Table('Day01', METADATA, autoload=True, autoload_with=ENGINE)
         return tb_inventory
 
-    def part1(self):
-        query = select(
+    def sum_by_elf(self):
+        return select(
             func.sum(self.inventory.c.value).label('sum_value')
-        ).group_by('elf_id').order_by(func.sum(self.inventory.c.value).desc()).limit(1)
+        ).group_by('elf_id').order_by(func.sum(self.inventory.c.value).desc())
+
+    def part1(self):
+        query = self.sum_by_elf().limit(1)
         print(str(query))
         return pd.read_sql(query, ENGINE)['sum_value'][0]
 
     def part2(self):
-        query = select(
-            func.sum(self.inventory.c.value).label('sum_value')
-        ).group_by('elf_id').order_by(func.sum(self.inventory.c.value).desc()).limit(3)
-        # query = select(func.sum(select(query_1.c.sum_value)).label('sum_value'))
-        # print(str(query))
-        return pd.read_sql(query, ENGINE)['sum_value'].sum()
+        query_1 = self.sum_by_elf().limit(3).cte('query_1')
+        query = select(func.sum(query_1.c.sum_value).label('sum_value'))
+        print(str(query))
+        return pd.read_sql(query, ENGINE)['sum_value'][0]
