@@ -1,8 +1,15 @@
 import os
 import numpy as np
 import pandas as pd
+import sqlalchemy
+from sqlalchemy import create_engine, Table, func, MetaData, select
+from sqlalchemy.exc import NoSuchTableError
 
 DATA_DIR = os.path.expanduser('~/Work/Data/AoC2022')
+
+ENGINE = create_engine(f'sqlite:///{os.path.expanduser("~/Work/Data/AoC2022/aoc2022.db")}')
+
+METADATA = MetaData()
 
 
 def read_input(day):
@@ -13,7 +20,7 @@ def read_input(day):
 class Day01:
     def __init__(self):
         self.input = read_input(1)
-        self._inventory = self.parse()
+        self.inventory = self.parse()
 
     def parse(self):
         carried = self.input.strip().split('\n\n')
@@ -21,10 +28,6 @@ class Day01:
             i: [int(x) for x in el.split('\n')] for i, el in enumerate(carried)
         }
         return inventory
-
-    @property
-    def inventory(self):
-        return self._inventory
 
     @property
     def sum_carried(self):
@@ -43,8 +46,11 @@ class Day01:
 
 
 class Day01Pandas(Day01):
-    @property
-    def inventory(self):
+    def __init__(self):
+        super(Day01Pandas, self).__init__()
+        self.inventory = self.parse_pandas()
+
+    def parse_pandas(self):
         inventory = Day01.parse(self)
         # Not part of puzzle but an alternative representation
         n_elves = len(inventory)
@@ -59,3 +65,33 @@ class Day01Pandas(Day01):
 
     def part2(self):
         return self.inventory.groupby('elf_id')['value'].sum().sort_values(ascending=False).cumsum().iloc[2]
+
+
+class Day01Sqla(Day01Pandas):
+    def __init__(self):
+        super(Day01Sqla, self).__init__()
+        self.inventory = self.parse_sqla()
+
+    def parse_sqla(self):
+        try:
+            tb_inventory = Table('Day01', METADATA, autoload=True, autoload_with=ENGINE)
+        except NoSuchTableError:
+            inventory = self.inventory
+            inventory.to_sql('Day01', ENGINE, if_exists='fail', index=False)
+            tb_inventory = Table('Day01', METADATA, autoload=True, autoload_with=ENGINE)
+        return tb_inventory
+
+    def part1(self):
+        query = select(
+            func.sum(self.inventory.c.value).label('sum_value')
+        ).group_by('elf_id').order_by(func.sum(self.inventory.c.value).desc()).limit(1)
+        print(str(query))
+        return pd.read_sql(query, ENGINE)['sum_value'][0]
+
+    def part2(self):
+        query = select(
+            func.sum(self.inventory.c.value).label('sum_value')
+        ).group_by('elf_id').order_by(func.sum(self.inventory.c.value).desc()).limit(3)
+        # query = select(func.sum(select(query_1.c.sum_value)).label('sum_value'))
+        # print(str(query))
+        return pd.read_sql(query, ENGINE)['sum_value'].sum()
