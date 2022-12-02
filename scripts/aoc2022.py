@@ -147,9 +147,13 @@ class Day02(AbstractDay):
              for k, v in win_value.items()],
             else_= 3
         ).label('win_value')
-        c_total = (c_response_val + c_win).label('total_value')
+        c_total = self.calc_total(c_response_val, c_win)
         tb_score = select([tb.c.player_1, tb.c.player_2, c_response, c_response_val, c_win, c_total]).cte('score')
         return tb_score
+
+    def calc_total(self, c_response_val, c_win):
+        c_total = (c_response_val + c_win).label('total_value')
+        return c_total
 
     def calc_result(self, c_response, do_test=False):
         tb_score = self.score_table(c_response)
@@ -173,3 +177,21 @@ class Day02(AbstractDay):
         c_response = case([(self.strategy.c.player_2 == k, v) for k, v in response_rule.items()]).label('response')
         return self.calc_result(c_response)
 
+
+class Day02Group(Day02):
+    def __init__(self):
+        super(Day02Group, self).__init__()
+        tb_r = self.strategy
+        self.strategy = select(
+            [
+                tb_r.c.player_1,
+                tb_r.c.player_2,
+                func.count().label('multiplier')
+            ]
+        ).group_by(
+            tb_r.c.player_1, tb_r.c.player_2
+        ).cte('grouped')
+
+    def calc_total(self, c_response_val, c_win):
+        c_total = (self.strategy.c.multiplier*(c_response_val + c_win)).label('total_value')
+        return c_total
