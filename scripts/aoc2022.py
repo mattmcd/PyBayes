@@ -2,8 +2,9 @@ import os
 import numpy as np
 import pandas as pd
 import sqlalchemy
-from sqlalchemy import create_engine, Table, func, MetaData, select
+from sqlalchemy import create_engine, Table, func, MetaData, select, case, and_
 from sqlalchemy.exc import NoSuchTableError
+from abc import ABC
 
 DATA_DIR = os.path.expanduser('~/Work/Data/AoC2022')
 
@@ -22,7 +23,18 @@ def day_01():
     return vals[0], sum(vals[:3])
 
 
-class Day01:
+class AbstractDay(ABC):
+    def part1(self):
+        return '????'
+
+    def part2(self):
+        return '????'
+
+    def __repr__(self):
+        return f'Part 1: {self.part1()}\nPart 2: {self.part2()}'
+
+
+class Day01(AbstractDay):
     def __init__(self):
         self.input = read_input(1)
         self.inventory = self.parse()
@@ -49,8 +61,6 @@ class Day01:
         # Not part of the puzzle but a nice way of inverting the map
         return max(self.sum_carried, key=self.sum_carried.get)
 
-    def __repr__(self):
-        return f'Part 1: {self.part1()}\nPart 2: {self.part2()}'
 
 
 class Day01Pandas(Day01):
@@ -106,3 +116,60 @@ class Day01Sqla(Day01Pandas):
         query = select(func.sum(query_1.c.sum_value).label('sum_value'))
         # print(str(query))
         return pd.read_sql(query, self.engine)['sum_value'][0]
+
+
+class Day02(AbstractDay):
+    def __init__(self):
+        self.engine = create_engine(f'sqlite:///{os.path.join(DATA_DIR, "aoc2022.db")}')
+        self.metadata = MetaData()
+        self.table_name = 'Day02'
+        self.strategy = self.parse_sqla()
+
+    def parse_sqla(self):
+        try:
+            tb_strategy = Table(self.table_name, self.metadata, autoload=True, autoload_with=self.engine)
+        except NoSuchTableError:
+            strategy = pd.DataFrame(
+                [line.split() for line in read_input(2).strip().split('\n')],
+                columns=['player_1', 'player_2']
+            )
+            strategy.to_sql(self.table_name, self.engine, if_exists='fail', index=False)
+            tb_strategy = Table(self.table_name, self.metadata, autoload=True, autoload_with=self.engine)
+        return tb_strategy
+
+    def score_table(self, c_response):
+        response_value = {'A': 1, 'B': 2, 'C': 3}
+        win_value = {('A', 'B'): 6, ('A', 'C'): 0, ('B', 'C'):  6, ('B', 'A'): 0, ('C', 'A'): 6, ('C', 'B'): 0}
+        tb = self.strategy
+        c_response_val = case([(c_response == k, v) for k, v in response_value.items()]).label('response_value')
+        c_win = case(
+            [( and_(tb.c.player_1 == k[0], c_response == k[1]), v)
+             for k, v in win_value.items()],
+            else_= 3
+        ).label('win_value')
+        c_total = (c_response_val + c_win).label('total_value')
+        tb_score = select([tb.c.player_1, tb.c.player_2, c_response, c_response_val, c_win, c_total]).cte('score')
+        return tb_score
+
+    def calc_result(self, c_response, do_test=False):
+        tb_score = self.score_table(c_response)
+        if do_test:
+            return pd.read_sql(select(tb_score), self.engine)
+        else:
+            query = select(func.sum(tb_score.c.total_value).label('result'))
+            return pd.read_sql(query, self.engine)['result'][0]
+
+    def part1(self, do_test=False):
+        response_rule = {'X': 'A', 'Y': 'B', 'Z': 'C'}
+        c_response = case([(self.strategy.c.player_2 == k, v) for k, v in response_rule.items()]).label('response')
+        return self.calc_result(c_response)
+
+    def part2(self, do_test=False):
+        p1 = self.strategy.c.player_1
+        response_rule = {
+            'X': case([(p1 == k, v) for k, v in {'A': 'C', 'B': 'A', 'C': 'B'}.items()]),
+            'Y': case([(p1 == k, v) for k, v in {'A': 'A', 'B': 'B', 'C': 'C'}.items()]),
+            'Z': case([(p1 == k, v) for k, v in {'A': 'B', 'B': 'C', 'C': 'A'}.items()])}
+        c_response = case([(self.strategy.c.player_2 == k, v) for k, v in response_rule.items()]).label('response')
+        return self.calc_result(c_response)
+
