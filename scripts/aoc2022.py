@@ -195,3 +195,19 @@ class Day02Group(Day02):
     def calc_total(self, c_response_val, c_win):
         c_total = (self.strategy.c.multiplier*(c_response_val + c_win)).label('total_value')
         return c_total
+
+
+def day_02():
+    # Short version
+    games = [line.split() for line in read_input(2).strip().split('\n')]
+    p2_resp_part1 = lambda p1, x: 'ABC'['XYZ'.index(x)]
+    p2_resp_part2 = lambda p1, x: 'ABC'[('ABC'.index(p1) + 'YZX'.index(x)) % 3]
+    c = np.array([3, 6, 0])
+    x = np.array([1, 0, 0])
+    win_score = lambda p1, p2: c @ np.roll(x, ('ABC'.index(p2) - 'ABC'.index(p1)) % 3)
+    total_score = lambda resp: lambda p1, x: 'ABC'.index(resp(p1, x)) + 1 + win_score(p1, resp(p1, x))
+    total_score_p1 = total_score(p2_resp_part1)
+    part_1 = sum(total_score_p1(p1, x) for p1, x in games)
+    total_score_p2 = total_score(p2_resp_part2)
+    part_2 = sum(total_score_p2(p1, x) for p1, x in games)
+    return part_1, part_2
