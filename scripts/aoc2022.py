@@ -211,3 +211,107 @@ def day_02():
     total_score_p2 = total_score(p2_resp_part2)
     part_2 = sum(total_score_p2(p1, x) for p1, x in games)
     return part_1, part_2
+
+
+def day_03():
+    bags = read_input(3).strip().split('\n')
+
+    def bag_diff(bag):
+        n = len(bag)
+        p1 = set(bag[:n//2])
+        p2 = set(bag[n//2:])
+        return list(p1.intersection(p2))[0]
+
+    def item_val(x):
+        val = 1 + (ord(x) -ord('A'))
+        if val > 26:
+            val = 1 + ord(x) - ord('a')
+        else:
+            val += 26
+        return val
+
+    part_1 = sum(item_val(x) for x in [bag_diff(bag) for bag in bags])
+
+    n = len(bags)
+    n_chunk = n // 3
+    joined = list()
+    for i in range(n_chunk):
+        joined.append(bags[(3*i): (3*(i+1))])
+
+    def unique_in_bag_group(bags_joined):
+        res = set(bags_joined[0])
+        for bag in bags_joined[1:]:
+            res = res.intersection(bag)
+        return list(res)[0]
+
+    part_2 = sum(item_val(unique_in_bag_group(x)) for x in joined)
+
+    return part_1, part_2
+
+
+class Day03(AbstractDay):
+    def __init__(self):
+        self.engine = create_engine(f'sqlite:///{os.path.join(DATA_DIR, "aoc2022.db")}')
+        self.metadata = MetaData()
+        self.table_name = 'Day03'
+        self.inventory = self.parse_sqla()
+
+    def parse_sqla(self):
+        try:
+            tb_inventory = Table(self.table_name, self.metadata, autoload=True, autoload_with=self.engine)
+        except NoSuchTableError:
+            inventory = read_input(3).strip().split('\n')
+            n_elves = len(inventory)
+            df = pd.DataFrame(
+                pd.concat([pd.Series(list(inventory[i]), name=i) for i in range(n_elves)], keys=range(n_elves)),
+            ).reset_index()
+            df.columns = ['elf_id', 'item_id', 'item']
+            df.to_sql(self.table_name, self.engine, if_exists='fail', index=False)
+            tb_inventory = Table(self.table_name, self.metadata, autoload=True, autoload_with=self.engine)
+
+        return tb_inventory
+
+    @staticmethod
+    def item_val(x):
+        val = 1 + (ord(x) - ord('A'))
+        if val > 26:
+            val = 1 + ord(x) - ord('a')
+        else:
+            val += 26
+        return val
+
+    def part1(self):
+        tb = self.inventory
+        tb_c = select(
+            [tb.c.elf_id, func.count(tb.c.item_id).label('count')]
+        ).group_by(tb.c.elf_id).cte('item_count')
+        tb_h = select(
+            [tb.c.elf_id, tb.c.item_id, case((tb.c.item_id < tb_c.c.count / 2, 0), else_=1).label('bag_half')]
+        ).select_from(
+            tb.join(tb_c, tb.c.elf_id == tb_c.c.elf_id)
+        ).cte('bag_half')
+        tb_i = select(
+            [tb.c.elf_id, tb.c.item]
+        ).select_from(
+            tb.join(
+                tb_h,
+                and_(tb.c.elf_id == tb_h.c.elf_id, tb.c.item_id == tb_h.c.item_id)
+            )
+        ).group_by(
+            tb.c.elf_id, tb.c.item
+        ).having(func.min(tb_h.c.bag_half) != func.max(tb_h.c.bag_half)).cte('item_both')
+
+        return pd.read_sql(select(tb_i.c.item), self.engine)['item'].map(self.item_val).sum()
+
+    def part2(self):
+        tb = self.inventory
+        tb_g = select(
+            [tb.c.elf_id, (tb.c.elf_id / 3).label('elf_group'), tb.c.item]
+        ).distinct().cte('elf_group')
+        tb_i = select(
+            [tb_g.c.elf_group, tb_g.c.item]
+        ).group_by(
+            tb_g.c.elf_group, tb_g.c.item
+        ).having(func.count(tb_g.c.item) == 3).cte('item_group')
+
+        return pd.read_sql(select(tb_i.c.item), self.engine)['item'].map(self.item_val).sum()
