@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import sqlalchemy
-from sqlalchemy import create_engine, Table, func, MetaData, select, case, and_
+from sqlalchemy import create_engine, Table, func, MetaData, select, case, and_, or_
 from sqlalchemy.exc import NoSuchTableError
 from abc import ABC
 import re
@@ -338,3 +338,60 @@ def day_04():
     )
 
     return df_p.contains.sum(), df_p.overlap.sum()
+
+
+class Day04(AbstractDay):
+    def __init__(self):
+        self.engine = create_engine(f'sqlite:///{os.path.join(DATA_DIR, "aoc2022.db")}')
+        self.metadata = MetaData()
+        self.table_name = 'Day04'
+        self.ranges = self.parse_sqla()
+
+    def parse_sqla(self):
+        try:
+            tb_ranges = Table(self.table_name, self.metadata, autoload=True, autoload_with=self.engine)
+        except NoSuchTableError:
+            inventory = read_input(3).strip().split('\n')
+            ranges = [{'elf_id': i, 'group_id': i // 2, 'lo': int(el[0]), 'hi': int(el[1])}
+                      for i, el in enumerate(re.findall(r'(\d+)-(\d+)', read_input(4)))]
+            df = pd.DataFrame(ranges)
+            df.to_sql(self.table_name, self.engine, if_exists='fail', index=False)
+            tb_ranges = Table(self.table_name, self.metadata, autoload=True, autoload_with=self.engine)
+
+        return tb_ranges
+
+    @staticmethod
+    def contains(a1, a2, b1, b2):
+        return case((or_(and_((a1 <= b1), (b2 <= a2)), and_((b1 <= a1), (a2 <= b2))), 1), else_=0)
+
+    @staticmethod
+    def overlaps(a1, a2, b1, b2):
+        return case((and_(b1 <= a2, a1 <= b2), 1), else_=0)
+
+    def create_interval_table(self):
+        tb = self.ranges
+        p = {'partition_by': [tb.c.group_id]}
+        tb_i = select(
+            [
+                tb.c.group_id,
+                func.first_value(tb.c.lo).over(**p).label('a1'),
+                func.first_value(tb.c.hi).over(**p).label('a2'),
+                func.last_value(tb.c.lo).over(**p).label('b1'),
+                func.last_value(tb.c.hi).over(**p).label('b2'),
+            ]
+        ).distinct().cte('intervals')
+        return tb_i
+
+    def part1(self):
+        tb_i = self.create_interval_table()
+        tb_r = select(
+            [func.sum(self.contains(tb_i.c.a1, tb_i.c.a2, tb_i.c.b1, tb_i.c.b2)).label('result')]
+        ).cte('result')
+        return pd.read_sql(select(tb_r.c.result), self.engine)['result'][0]
+
+    def part2(self):
+        tb_i = self.create_interval_table()
+        tb_r = select(
+            [func.sum(self.overlaps(tb_i.c.a1, tb_i.c.a2, tb_i.c.b1, tb_i.c.b2)).label('result')]
+        ).cte('result')
+        return pd.read_sql(select(tb_r.c.result), self.engine)['result'][0]
