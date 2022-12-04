@@ -5,6 +5,8 @@ import sqlalchemy
 from sqlalchemy import create_engine, Table, func, MetaData, select, case, and_
 from sqlalchemy.exc import NoSuchTableError
 from abc import ABC
+import re
+
 
 DATA_DIR = os.path.expanduser('~/Work/Data/AoC2022')
 
@@ -315,3 +317,24 @@ class Day03(AbstractDay):
         ).having(func.count(tb_g.c.item) == 3).cte('item_group')
 
         return pd.read_sql(select(tb_i.c.item), self.engine)['item'].map(self.item_val).sum()
+
+
+def day_04():
+    ranges = [{'elf_id': i, 'group_id': i//2, 'lo': int(el[0]), 'hi': int(el[1])}
+              for i, el in enumerate(re.findall(r'(\d+)-(\d+)', read_input(4)))]
+    df = pd.DataFrame(ranges)
+    df_p = df.join(
+        df.groupby('group_id')[['lo', 'hi']].shift(1), lsuffix='l', rsuffix='r'
+    ).dropna()
+
+    def contains(a1, a2, b1, b2):
+        return ((a1 <= b1) and (b2 <= a2)) or ((b1 <= a1) and (a2 <= b2))
+
+    df_p['contains'] = df_p.apply(
+        lambda x: contains(x['lol'], x['hil'], x['lor'], x['hir']), axis=1)
+
+    df_p['overlap'] = df_p.apply(
+        lambda x: x['lor'] <= x['hil'] and x['lol'] <= x['hir'], axis=1
+    )
+
+    return df_p.contains.sum(), df_p.overlap.sum()
