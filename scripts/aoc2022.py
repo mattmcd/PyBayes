@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, Table, func, MetaData, select, case, and_,
 from sqlalchemy.exc import NoSuchTableError
 from abc import ABC
 import re
+from collections import defaultdict
 
 
 DATA_DIR = os.path.expanduser('~/Work/Data/AoC2022')
@@ -395,3 +396,73 @@ class Day04(AbstractDay):
             [func.sum(self.overlaps(tb_i.c.a1, tb_i.c.a2, tb_i.c.b1, tb_i.c.b2)).label('result')]
         ).cte('result')
         return pd.read_sql(select(tb_r.c.result), self.engine)['result'][0]
+
+
+def day_05_parse(do_test=False):
+    if do_test:
+        in_str = """    [D]    
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
+
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2
+        """
+    else:
+        in_str = read_input(5).rstrip()
+
+    move_lines = re.findall(r'move (\d+) from (\d+) to (\d+)', in_str)
+    lines = in_str.split('\n')
+    col_lines = []
+    n_col = 0
+    for i, line in enumerate(lines):
+        col_ind_line = re.findall(r'^(\s+\d+\s+)+$', line)
+        if col_ind_line == []:
+            col_lines.append(line)
+        else:
+            n_col = int(col_ind_line[0].strip())
+            break
+
+    cols = defaultdict(str)
+    for line in col_lines:
+        for i in range(0, n_col):
+            cols[i+1] += line[1+4*i]
+
+    for i in range(0, n_col):
+        cols[i+1] = cols[i+1].strip()
+
+    moves = [{'src': int(s), 'dst': int(d), 'num': int(c)} for c, s, d in move_lines]
+
+    return cols, moves
+
+
+def day_05(do_test=False):
+    cols, moves = day_05_parse(do_test)
+
+    def part_1():
+        for move in moves:
+            cols[move['dst']] = cols[move['src']][:move['num']][::-1] + cols[move['dst']]
+            cols[move['src']] = cols[move['src']][move['num']:]
+
+        out_str = ''
+        for i in range(len(cols)):
+            out_str += cols[i+1][0]
+        return out_str
+
+    def part_2():
+        for move in moves:
+            cols[move['dst']] = cols[move['src']][:move['num']] + cols[move['dst']]
+            cols[move['src']] = cols[move['src']][move['num']:]
+
+        out_str = ''
+        for i in range(len(cols)):
+            out_str += cols[i + 1][0]
+        return out_str
+
+    p1 = part_1()
+    cols, moves = day_05_parse(do_test)
+    p2 = part_2()
+
+    return p1, p2
