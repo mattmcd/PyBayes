@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import sqlalchemy
-from sqlalchemy import create_engine, Table, func, MetaData, select, case, and_, or_
+from sqlalchemy import create_engine, Table, func, MetaData, select, case, and_, or_, literal
 from sqlalchemy.exc import NoSuchTableError
 from abc import ABC
 import re
@@ -466,3 +466,58 @@ def day_05(do_test=False):
     p2 = part_2()
 
     return p1, p2
+
+
+def day_05_sqla(do_test=False):
+    cols, moves = day_05_parse(do_test)
+    s0 = ''.join([str(k) + v for k, v in cols.items()])
+
+    engine = create_engine('sqlite:///:memory')
+    metadata = MetaData()
+
+    def update_state(state, src, dst, num, rev):
+        # print(state, src, dst, num, rev)
+        i_src = state.index(str(src))
+        to_move = state[i_src+1:i_src+num+1]
+        # print(to_move)
+        state = state.replace(str(src) + to_move, str(src))
+        # print(state)
+        moved = to_move[::-1] if rev else to_move
+        state = state.replace(str(dst), str(dst) + moved)
+        return state
+
+    with engine.connect() as conn:
+        # Add UDF update state
+        conn.connection.connection.create_function('update_state', 5, update_state)
+        try:
+            rows_added = pd.DataFrame(moves).to_sql('moves', conn)
+            # print(f'Rows added {rows_added}')
+        except ValueError as ex:
+            print(ex)
+        tb_m = Table('moves', metadata, autoload_with=conn)
+
+        q_base = select(
+            [
+                literal(0).label('step'),
+                literal(s0).label('state_p1'),
+                literal(s0).label('state_p2')
+            ]).cte('base', recursive=True)
+        q_rest = select(
+            [
+                q_base.c.step + 1,
+                func.update_state(q_base.c.state_p1, tb_m.c.src, tb_m.c.dst, tb_m.c.num, True),
+                func.update_state(q_base.c.state_p2, tb_m.c.src, tb_m.c.dst, tb_m.c.num, False),
+            ]
+        ).select_from(
+            q_base.join(tb_m, q_base.c.step == tb_m.c.index)
+        )
+        q_full = q_base.union_all(q_rest)
+
+        df = pd.read_sql(select(q_full).order_by(q_full.c.step.desc()).limit(1), conn)
+        tb_m.drop(conn)
+
+    part_1 = ''.join([x[0] for x in re.findall(r'\d+(\D*)', df.state_p1[0])])
+    part_2 = ''.join([x[0] for x in re.findall(r'\d+(\D*)', df.state_p2[0])])
+
+    return part_1, part_2
+
