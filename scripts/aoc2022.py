@@ -570,3 +570,35 @@ def day_06_sqla(do_test=False):
     tb.drop(engine)
 
     return p1, p2
+
+
+def day_06_sqla2(do_test=False):
+    stream = 'mjqjpqmgbljsphdztnvjfqwrcgsmlb' if do_test else read_input(6).strip()
+    engine = create_engine('sqlite:///:memory')
+    metadata = MetaData()
+    tb_name = 'stream_test' if do_test else 'stream'
+    pd.DataFrame(list(stream), columns=['value']).to_sql(tb_name, engine)
+    tb = Table(tb_name, metadata, autoload_with=engine)
+
+    def lag_table(n):
+        q_base = select([literal(0).label('lag'), tb.c.index, tb.c.value]).cte('base', recursive=True)
+        q_rest = select([q_base.c.lag + 1, q_base.c.index + 1, q_base.c.value]).where(q_base.c.lag < n-1)
+        q_full = q_base.union_all(q_rest)
+        tb_l = select(
+            [q_full.c.index, func.count(q_full.c.value.distinct())]
+        ).group_by(
+            q_full.c.index
+        ).having(
+            func.count(q_full.c.value.distinct()) == n
+        ).limit(1).cte(f'lagged_{n}')
+        return tb_l
+
+    n = 4
+    p1 = pd.read_sql(select(lag_table(n).c.index + 1), engine).values[0][0]
+
+    n = 14
+    p2 = pd.read_sql(select(lag_table(n).c.index + 1), engine).values[0][0]
+
+    tb.drop(engine)
+
+    return p1, p2
