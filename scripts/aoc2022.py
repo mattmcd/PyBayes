@@ -521,3 +521,21 @@ def day_05_sqla(do_test=False):
 
     return part_1, part_2
 
+
+def day_06(do_test=False):
+    stream = 'mjqjpqmgbljsphdztnvjfqwrcgsmlb' if do_test else read_input(6).strip()
+    df = pd.DataFrame(list(stream), columns=['lag_0'])
+    for i in range(1,4):
+        df.loc[:, f'lag_{i}'] = df['lag_0'].shift(i)
+    df.dropna(inplace=True)
+    df.loc[:, 'n_diff'] = df.apply(lambda x: len(set(x.to_list())), axis=1)
+
+    part_1 = df.index[df.n_diff ==4][0] + 1
+    df.drop(columns={'n_diff'}, inplace=True)
+    for i in range(4, 14):
+        df.loc[:, f'lag_{i}'] = df['lag_0'].shift(i)
+    df.dropna(inplace=True)
+    df.loc[:, 'n_diff'] = df.apply(lambda x: len(set(x.to_list())), axis=1)
+    part_2 = df.index[df.n_diff == 14][0] + 1
+
+    return part_1, part_2
