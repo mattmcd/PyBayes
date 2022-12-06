@@ -488,7 +488,7 @@ def day_05_sqla(do_test=False):
 
     with engine.connect() as conn:
         # Add UDF update state
-        conn.connection.connection.create_function('update_state', 5, update_state)
+        conn.connection.create_function('update_state', 5, update_state)
         try:
             rows_added = pd.DataFrame(moves).to_sql('moves', conn)
             # print(f'Rows added {rows_added}')
