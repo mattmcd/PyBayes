@@ -539,3 +539,34 @@ def day_06(do_test=False):
     part_2 = df.index[df.n_diff == 14][0] + 1
 
     return part_1, part_2
+
+
+def day_06_sqla(do_test=False):
+    stream = 'mjqjpqmgbljsphdztnvjfqwrcgsmlb' if do_test else read_input(6).strip()
+    engine = create_engine('sqlite:///:memory')
+    metadata = MetaData()
+    tb_name = 'stream_test' if do_test else 'stream'
+    pd.DataFrame(list(stream), columns=['lag_0']).to_sql(tb_name, engine)
+    tb = Table(tb_name, metadata, autoload_with=engine)
+
+    def lag_table(n):
+        tb_l = select(
+            [tb.c.index, tb.c.lag_0] + [
+                func.lag(tb.c.lag_0, i).over(order_by=tb.c.index).label(f'lag_{i}') for i in range(1, n)
+            ]
+        ).cte(f'lagged_{n}')
+        return tb_l
+
+    n = 4
+    tb_pt1 = lag_table(n)
+    part_1 = pd.read_sql(select(tb_pt1).where(tb_pt1.c[f'lag_{n-1}'].isnot(None)), engine)
+    p1 = part_1['index'][part_1.apply(lambda x: len(set(x.to_list())) == n+1, axis=1)].iloc[0] + 1
+
+    n = 14
+    tb_pt2 = lag_table(n)
+    part_2 = pd.read_sql(select(tb_pt2).where(tb_pt2.c[f'lag_{n-1}'].isnot(None)), engine)
+    p2 = part_2['index'][part_2.apply(lambda x: len(set(x.to_list())) == n+1, axis=1)].iloc[0] + 1
+
+    tb.drop(engine)
+
+    return p1, p2
