@@ -602,3 +602,88 @@ def day_06_sqla2(do_test=False):
     tb.drop(engine)
 
     return p1, p2
+
+
+class Day07:
+
+    def __init__(self, do_test=False):
+        self.dir_id = None
+        self.tb_dir = None
+        self.tb_file = None
+    def get_dir_id(self, name, parent_id):
+        dir_id = None
+        for k, v in self.tb_dir.items():
+            if v['name'] == name and v['parent_id'] == parent_id:
+                dir_id = k
+                break
+        return dir_id
+    def parse(self, line):
+        if '$ cd ' in line:
+            name = line.split('$ cd ')[1]
+            if name == '..':
+                # print(f'{line} -> go up')
+                self.dir_id = self.tb_dir[self.dir_id]['parent_id']
+            else:
+                # print(f'{line} -> go to {name}')
+                if self.dir_id == None:
+                    self.dir_id = 0
+                    self.tb_dir = {self.dir_id: {'name': name, 'parent_id': None}}
+                else:
+                    self.dir_id = self.get_dir_id(name, self.dir_id)
+        elif '$ ls' in line:
+            pass
+            # print(f'{line} -> list files')
+        elif 'dir ' in line:
+            # print(f'{line} -> dir {line.split("dir ")[1]}')
+            max_id = max(self.tb_dir.keys())
+            self.tb_dir[max_id + 1] = {'name': line.split('dir ')[1], 'parent_id': self.dir_id}
+        else:
+            s_size, name = line.split(' ')
+            size = int(s_size)
+            # print(f'{line} -> file {name} {size}')
+            if self.tb_file is None:
+                self.tb_file = {0: {'name': name, 'size': size, 'parent_id': self.dir_id}}
+            else:
+                max_id = max(self.tb_file.keys())
+                self.tb_file[max_id + 1] = {'name': name, 'size': size, 'parent_id': self.dir_id}
+        # print(self.tb_dir)
+        # print(self.tb_file)
+
+
+def day_07(do_test=False):
+    logs = """$ cd /
+$ ls
+dir a
+14848514 b.txt
+8504156 c.dat
+dir d
+$ cd a
+$ ls
+dir e
+29116 f
+2557 g
+62596 h.lst
+$ cd e
+$ ls
+584 i
+$ cd ..
+$ cd ..
+$ cd d
+$ ls
+4060174 j
+8033020 d.log
+5626152 d.ext
+7214296 k""" if do_test else read_input(7).strip()
+    engine = create_engine('sqlite:///:memory')
+    metadata = MetaData()
+    tb_dir = 'dir_test' if do_test else 'dir'
+    tb_file = 'file_test' if do_test else 'file'
+    parser = Day07()
+    [parser.parse(line) for line in logs.split('\n')]
+    # print(parser.tb_dir)
+    # print(parser.tb_file)
+    df_dir = pd.DataFrame.from_dict(parser.tb_dir, orient='index')
+    # df_dir.parent_id = df_dir.parent_id.astype(int)
+    df_file = pd.DataFrame.from_dict(parser.tb_file, orient='index')
+    return df_dir, df_file
+
