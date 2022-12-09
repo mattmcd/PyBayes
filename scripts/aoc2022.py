@@ -352,7 +352,6 @@ class Day04(AbstractDay):
         try:
             tb_ranges = Table(self.table_name, self.metadata, autoload=True, autoload_with=self.engine)
         except NoSuchTableError:
-            inventory = read_input(3).strip().split('\n')
             ranges = [{'elf_id': i, 'group_id': i // 2, 'lo': int(el[0]), 'hi': int(el[1])}
                       for i, el in enumerate(re.findall(r'(\d+)-(\d+)', read_input(4)))]
             df = pd.DataFrame(ranges)
@@ -687,3 +686,44 @@ $ ls
     df_file = pd.DataFrame.from_dict(parser.tb_file, orient='index')
     return df_dir, df_file
 
+
+class Day08(AbstractDay):
+    def __init__(self, do_test=False):
+        self.engine = create_engine(f'sqlite:///:memory')
+        self.metadata = MetaData()
+        self.table_name = 'Day08_test' if do_test else 'Day08'
+        self.do_test = do_test
+        self.trees = self.parse_sqla()
+
+    def parse_sqla(self):
+        try:
+            tb_trees = Table(self.table_name, self.metadata, autoload=True, autoload_with=self.engine)
+        except NoSuchTableError:
+            in_str = """30373\n25512\n65332\n33549\n35390""" if self.do_test else read_input(8).strip()
+            lines = in_str.split('\n')
+            res = list()
+            for i, line in enumerate(lines):
+                for j in range(len(line)):
+                    res.append({'row': i, 'col': j, 'value': int(line[j])})
+            df = pd.DataFrame(res)
+            df.to_sql(self.table_name, self.engine, if_exists='fail', index=False)
+            tb_trees = Table(self.table_name, self.metadata, autoload=True, autoload_with=self.engine)
+
+        return tb_trees
+
+    def part1(self):
+        tb = self.trees
+        seen_left = func.coalesce(
+            tb.c.value > func.max(tb.c.value).over(partition_by=tb.c.row, order_by=tb.c.col, rows=(None, -1)), True).label('left')
+        seen_right = func.coalesce(
+            tb.c.value > func.max(tb.c.value).over(partition_by=tb.c.row, order_by=tb.c.col.desc(), rows=(None, -1)), True).label('right')
+        seen_up = func.coalesce(
+            tb.c.value > func.max(tb.c.value).over(partition_by=tb.c.col, order_by=tb.c.row, rows=(None, -1)), True).label('up')
+        seen_down = func.coalesce(
+            tb.c.value > func.max(tb.c.value).over(partition_by=tb.c.col, order_by=tb.c.row.desc(), rows=(None, -1)), True).label('down')
+        tb_s = select([tb, case((or_(seen_left, seen_right, seen_up, seen_down), 1), else_=0).label('seen')]).cte('seen')
+        df = pd.read_sql(func.sum(tb_s.c.seen), self.engine)
+        return df
+
+    def part2(self):
+        pass
