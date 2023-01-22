@@ -714,16 +714,34 @@ class Day08(AbstractDay):
     def part1(self):
         tb = self.trees
         seen_left = func.coalesce(
-            tb.c.value > func.max(tb.c.value).over(partition_by=tb.c.row, order_by=tb.c.col, rows=(None, -1)), True).label('left')
+            tb.c.value > func.max(tb.c.value).over(
+                partition_by=tb.c.row, order_by=tb.c.col, rows=(None, -1)
+            ), True).label('left')
         seen_right = func.coalesce(
-            tb.c.value > func.max(tb.c.value).over(partition_by=tb.c.row, order_by=tb.c.col.desc(), rows=(None, -1)), True).label('right')
+            tb.c.value > func.max(tb.c.value).over(
+                partition_by=tb.c.row, order_by=tb.c.col.desc(), rows=(None, -1)
+            ), True).label('right')
         seen_up = func.coalesce(
-            tb.c.value > func.max(tb.c.value).over(partition_by=tb.c.col, order_by=tb.c.row, rows=(None, -1)), True).label('up')
+            tb.c.value > func.max(tb.c.value).over(
+                partition_by=tb.c.col, order_by=tb.c.row, rows=(None, -1)
+            ), True).label('up')
         seen_down = func.coalesce(
-            tb.c.value > func.max(tb.c.value).over(partition_by=tb.c.col, order_by=tb.c.row.desc(), rows=(None, -1)), True).label('down')
-        tb_s = select([tb, case((or_(seen_left, seen_right, seen_up, seen_down), 1), else_=0).label('seen')]).cte('seen')
+            tb.c.value > func.max(tb.c.value).over(
+                partition_by=tb.c.col, order_by=tb.c.row.desc(), rows=(None, -1)
+            ), True).label('down')
+        tb_s = select(
+            [tb, case((or_(seen_left, seen_right, seen_up, seen_down), 1), else_=0).label('seen')]
+        ).cte('seen')
         df = pd.read_sql(func.sum(tb_s.c.seen), self.engine)
         return df
 
     def part2(self):
-        pass
+        tb = self.trees
+        seen_left = func.coalesce(
+            tb.c.value >= func.last_value(tb.c.value).over(
+                partition_by=tb.c.row, order_by=tb.c.col, rows=(None, -1)
+            ), True).label('left')
+        tb_s = select([tb, seen_left]).cte(
+            'seen')
+        df = pd.read_sql(select(tb_s), self.engine)
+        return df
