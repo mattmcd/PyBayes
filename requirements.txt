@@ -5,7 +5,8 @@ sqlalchemy
 matplotlib
 seaborn
 arviz
-tensorflow
+tensorflow-macos
+tensorflow-metal
 tensorflow-probability
 scikit-learn
 statsmodels
@@ -16,7 +17,7 @@ flax
 blackjax
 optax
 cvxpy
-cvxpylayers
+# cvxpylayers
 antlr4-python3-runtime
 jupyter
 ipython
