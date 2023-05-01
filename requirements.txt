@@ -8,6 +8,12 @@ arviz
 tensorflow-macos
 tensorflow-metal
 tensorflow-probability
+tensorflow-datasets
+tensorflow-decision-forests
+# tensorflow-gnn
+torch
+torch-geometric
+pymde
 scikit-learn
 statsmodels
 networkx
@@ -24,3 +30,4 @@ ipython
 ipywidgets
 jupytext
 arxiv
+pymc
