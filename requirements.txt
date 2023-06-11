@@ -13,6 +13,10 @@ tensorflow-decision-forests
 # tensorflow-gnn
 torch
 torch-geometric
+transformers
+einops
+accelerate
+xformers
 pymde
 scikit-learn
 statsmodels
@@ -26,6 +30,7 @@ cvxpy
 # cvxpylayers
 antlr4-python3-runtime
 jupyter
+jupyterlab
 ipython
 ipywidgets
 jupytext
