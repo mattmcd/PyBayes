@@ -40,7 +40,7 @@ x_s_i = prob_to_mat(p_s_i)
 n_sat = len(p_s_i.index.levels[0])
 d_s_i = lambda Intelligence: tfd.FiniteDiscrete(
     tf.range(n_sat, dtype=tf.int32),
-    probs=tf.gather_nd(x_s_i, tf.transpose(tf.stack([Intelligence]))),  # FIXME
+    probs=tf.gather_nd(x_s_i, tf.transpose(tf.stack([Intelligence]))),
     name='SAT_given_Intelligence'
 )
 
