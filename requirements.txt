@@ -1,6 +1,7 @@
 numpy
 pandas
 sympy
+scipy
 sqlalchemy
 matplotlib
 seaborn
@@ -36,3 +37,8 @@ ipywidgets
 jupytext
 arxiv
 pymc
+# google-vizier  #  Conflict with SQLAlchemy 2.0 - works with 1.4
+simpy
+# dowhy
+# econml
+pygraphviz  # See https://stackoverflow.com/questions/69970147/how-do-i-resolve-the-pygraphviz-error-on-mac-os
