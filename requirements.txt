@@ -17,18 +17,19 @@ torch-geometric
 transformers
 einops
 accelerate
-xformers
+#xformers
 pymde
 scikit-learn
 statsmodels
 networkx
-jax
-jaxlib
+jax==0.4.11
+jaxlib==0.4.11
+jax-metal==0.0.4  # Mac OS 13+ 0.0.3, 14 0.0.4
 flax
 blackjax
 optax
 cvxpy
-# cvxpylayers
+cvxpylayers
 antlr4-python3-runtime
 jupyter
 jupyterlab
@@ -41,4 +42,4 @@ pymc
 simpy
 # dowhy
 # econml
-pygraphviz  # See https://stackoverflow.com/questions/69970147/how-do-i-resolve-the-pygraphviz-error-on-mac-os
+# pygraphviz  # See https://stackoverflow.com/questions/69970147/how-do-i-resolve-the-pygraphviz-error-on-mac-os
