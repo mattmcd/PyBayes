@@ -24,7 +24,7 @@ statsmodels
 networkx
 jax==0.4.11
 jaxlib==0.4.11  # Latest version compatible with jax-metal 0.0.4
-jax-metal==0.0.4  # Mac OS 13+ 0.0.3, 14 0.0.4
+jax-metal==0.0.4  # Mac OS 13+ 0.0.3, 14 0.0.4  # jax.numpy.linalg operations failing currently
 flax
 blackjax
 optax
@@ -41,6 +41,9 @@ pymc
 equinox==0.10.6  # Latest version that works with jaxlib 0.4.11
 # google-vizier  #  Conflict with SQLAlchemy 2.0 - works with 1.4
 simpy
+langchain
+keras-core
 # dowhy
 # econml
 # pygraphviz  # See https://stackoverflow.com/questions/69970147/how-do-i-resolve-the-pygraphviz-error-on-mac-os
+streamlit
