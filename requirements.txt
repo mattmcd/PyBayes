@@ -22,14 +22,16 @@ pymde
 scikit-learn
 statsmodels
 networkx
-jax==0.4.11
-jaxlib==0.4.11  # Latest version compatible with jax-metal 0.0.4
-jax-metal==0.0.4  # macOS 13+ 0.0.3, 14 0.0.4  # jax.numpy.linalg operations failing currently
+jax
+jaxlib  # Latest version
+# jax-metal==0.0.4  # macOS 13+ 0.0.3, 14 0.0.4  # jax.numpy.linalg operations failing currently
 matlabengine==23.2.1
 flax
 blackjax
 optax
 cvxpy
+diffrax
+equinox
 cvxpylayers
 antlr4-python3-runtime
 jupyter
