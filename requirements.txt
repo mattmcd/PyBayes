@@ -41,7 +41,6 @@ ipywidgets
 jupytext
 arxiv
 pymc
-equinox==0.10.6  # Latest version that works with jaxlib 0.4.11
 # google-vizier  #  Conflict with SQLAlchemy 2.0 - works with 1.4
 simpy
 langchain
