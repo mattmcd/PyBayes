@@ -2,12 +2,13 @@
 import os
 import numpy as np
 # Set KERAS_BACKEND="jax" or "tensorflow" or "torch" in environment
-import keras_core as keras
+import keras
 from journal_20231025_keras_core_jax_metal import wrap_jax_metal
-
+import tensorflow as tf
+legacy_adam = tf.keras.optimizers.legacy.Adam
 # %%
 BACKEND = os.environ.get('KERAS_BACKEND')
-
+print(f'Using backend {BACKEND}')
 # %%
 # See https://keras.io/keras_core/guides/getting_started_with_keras_core/
 # Load the data and split it between train and test sets
@@ -49,19 +50,20 @@ model.summary()
 # %%
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(),
-    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    optimizer=legacy_adam(learning_rate=1e-3),
+    # optimizer=keras.optimizers.Adam(learning_rate=1e-3),
     metrics=[
         keras.metrics.SparseCategoricalAccuracy(name="acc"),
     ],
 )
 
 # %%
-use_jit = True
-
-if use_jit and BACKEND == 'jax':
-    model = wrap_jax_metal(model)
-else:
-    model.jit_compile = False
+# use_jit = False
+#
+# if use_jit and BACKEND == 'jax':
+#     model = wrap_jax_metal(model)
+# else:
+#     model.jit_compile = False
 
 
 # %%

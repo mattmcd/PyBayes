@@ -6,7 +6,7 @@ sqlalchemy
 matplotlib
 seaborn
 arviz
-tensorflow-macos
+# tensorflow-macos
 tensorflow-metal
 tensorflow-probability
 tensorflow-datasets
@@ -46,7 +46,7 @@ pymc
 # google-vizier  #  Conflict with SQLAlchemy 2.0 - works with 1.4
 simpy
 langchain
-keras-core
+keras
 # dowhy
 # econml
 # pygraphviz  # See https://stackoverflow.com/questions/69970147/how-do-i-resolve-the-pygraphviz-error-on-mac-os
