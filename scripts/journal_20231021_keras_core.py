@@ -50,20 +50,20 @@ model.summary()
 # %%
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(),
-    optimizer=legacy_adam(learning_rate=1e-3),
-    # optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    # optimizer=legacy_adam(learning_rate=1e-3),
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
     metrics=[
         keras.metrics.SparseCategoricalAccuracy(name="acc"),
     ],
 )
 
 # %%
-# use_jit = False
-#
-# if use_jit and BACKEND == 'jax':
-#     model = wrap_jax_metal(model)
-# else:
-#     model.jit_compile = False
+use_jit = True
+
+if use_jit and BACKEND == 'jax':
+    model = wrap_jax_metal(model)
+else:
+    model.jit_compile = False
 
 
 # %%
