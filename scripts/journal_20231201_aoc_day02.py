@@ -33,7 +33,7 @@ def match_array(pat, s):
     res = []
     for m in re.finditer(pat, s):
         res.append((m.start(), int(m.group(1))))
-    return np.array(res)
+    return np.vstack([np.array([[0, 0]]), np.array(res)])
 
 def match_draws(s):
     res = []
@@ -41,35 +41,33 @@ def match_draws(s):
     for m in re.finditer(r'[;\n]', s):
         res.append((m.start(), count))
         count += 1
-    return np.array(res)
+    return  np.vstack([np.array([[0, 0]]), np.array(res)])
 
+
+def match_values(pat, s):
+    vals = []
+    labels = []
+    for m in re.finditer(pat, s):
+        vals.append((m.start(), int(m.group(1)) ))
+        labels.append(m.group(2))
+    return np.array(vals), labels
 
 # %%
 def parse(s):
     games = match_array(r'Game (\d+)', s)
-    games = np.vstack([np.array([[0, 0]]), games])
     draw_ends = match_draws(s)
-    draw_ends = np.vstack([np.array([[0, 0]]), draw_ends])
-    reds = match_array(r'(\d+) red', s)
-    greens = match_array(r'(\d+) green', s)
-    blues = match_array(r'(\d+) blue', s)
+    vals, labels = match_values(r'(\d+) (red|green|blue)', s)
     game_lookup = np.zeros(len(s), dtype=int)
     draw_lookup = np.zeros(len(s), dtype=int)
     for i in range(len(s)):
         game_lookup[i] = games[np.argwhere(games[:, 0] <= i)[-1][0], 1]
         draw_lookup[i] = draw_ends[np.argwhere(draw_ends[:, 0] <= i)[-1][0], 1]
 
-    df_r = pd.DataFrame({
-        'game': game_lookup[reds[:, 0]], 'draw': draw_lookup[reds[:, 0]], 'value': reds[:, 1]
-    }).assign(label='red')
-    df_g = pd.DataFrame({
-        'game': game_lookup[greens[:, 0]], 'draw': draw_lookup[greens[:, 0]], 'value': greens[:, 1]
-    }).assign(label='green')
-    df_b = pd.DataFrame({
-        'game': game_lookup[blues[:, 0]], 'draw': draw_lookup[blues[:, 0]], 'value': blues[:, 1]
-    }).assign(label='blue')
-    df = pd.pivot_table(
-        pd.concat([df_r, df_g, df_b], axis=0),
+    df_l = pd.DataFrame({
+        'game': game_lookup[vals[:, 0]], 'draw': draw_lookup[vals[:, 0]],
+        'value': vals[:, 1], 'label': labels
+    })
+    df = pd.pivot_table(df_l,
         index=['game', 'draw'], columns='label', values='value', aggfunc='sum'
     ).fillna(0).astype(int)
 
