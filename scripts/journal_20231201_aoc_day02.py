@@ -38,7 +38,7 @@ def match_array(pat, s):
 def match_draws(s):
     res = []
     count = 1
-    for m in re.finditer(';', s):
+    for m in re.finditer(r'[;\n]', s):
         res.append((m.start(), count))
         count += 1
     return np.array(res)
