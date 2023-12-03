@@ -42,54 +42,38 @@ def match_values(pat, s):
 
     return np.array(vals)
 
+
 # %%
 def parse(s):
     lines = s.strip().split('\n')
     n_row, n_col = len(lines), len(lines[0]) + 1  # +1 for cols due to \n
     vals = match_values(r'(\d+)', s)
     res = []
-    connectors = []
     for v in vals:
-        el_i, el_j = np.unravel_index(range(v[0], v[1]), (n_row, n_col))
-        neighbours = []
-        found = False
-        for k in range(len(el_j)):
-            i, j = el_i[k], el_j[k]
-            # Get index of neighbours of all chars top-left, centre-left, top-right ec
-            neighbours.append(np.ravel_multi_index((i-1, j-1),(n_row, n_col),  mode='clip'))
-            neighbours.append(np.ravel_multi_index((i-1, j), (n_row, n_col), mode='clip'))
-            neighbours.append(np.ravel_multi_index((i-1, j+1),(n_row, n_col),  mode='clip'))
-            neighbours.append(np.ravel_multi_index((i, j-1),(n_row, n_col),  mode='clip'))
-            neighbours.append(np.ravel_multi_index((i, j+1),(n_row, n_col),  mode='clip'))
-            neighbours.append(np.ravel_multi_index((i+1, j-1),(n_row, n_col),  mode='clip'))
-            neighbours.append(np.ravel_multi_index((i+1, j),(n_row, n_col),  mode='clip'))
-            neighbours.append(np.ravel_multi_index((i+1, j + 1),(n_row, n_col),  mode='clip'))
-            neighbours = list(set(neighbours))
-            for n in neighbours:
-                if len(re.findall(r'[^.0-9\n]', s[n])) > 0:
-                    res.append(v[2])
-                    connectors.append((n, s[n], v[2]))
-                    found = True
-                    break
-            if found:
+        i, j = np.unravel_index(range(v[0], v[1]), (n_row, n_col))
+        neighbours = [
+            np.ravel_multi_index((i + x, j + y), (n_row, n_col), mode='clip')
+            for x, y in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        ]
+        for n in set(np.concatenate(neighbours)):
+            if len(re.findall(r'[^.0-9\n]', s[n])) > 0:
+                res.append((n, s[n], v[2]))
                 break
 
-    return res, connectors
+    return pd.DataFrame(res, columns=['loc', 'symbol', 'val'])
 
 
 # %%
 def part1_sol(s):
-    res, _ = parse(s)
-    return np.array(res).sum()
+    df = parse(s)
+    return df.val.sum()
 
 
 # %%
 def part2_sol(s):
-    _, connectors = parse(s)
-    df = pd.DataFrame(
-        [{'loc': c[0], 'val': c[2]} for c in connectors if c[1] == '*']
-    ).groupby('loc').agg(['count', 'prod'])
-    return df.loc[df[('val', 'count')] == 2, ('val', 'prod')].sum()
+    df = parse(s)
+    df_g = df.query('symbol == "*"').groupby('loc').val.agg(['count', 'prod'])
+    return df_g.loc[df_g['count'] == 2, 'prod'].sum()
 
 
 # %%
