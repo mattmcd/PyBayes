@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import re
 from io import StringIO
+from jax import jit
+import jax.numpy as jnp
 
 DATA_DIR = os.path.expanduser('~/Work/Data/AoC2023')
 
@@ -79,48 +81,75 @@ def parse(s):
     seed_str = s.split('\n')[0].split(': ')[1]
     # print(seed_str)
     seeds = [int(n) for n in seed_str.split(' ')]
-
     return seeds, maps
 
 
 # %%
+def lookup(maps, v):
+    steps = maps.keys()
+    for step in steps:
+        m = maps[step]
+        d = jnp.select((v >= m[:, 0]) & (v <= m[:, 1]), m[:, 2], jnp.nan)
+        s = jnp.select((v >= m[:, 0]) & (v <= m[:, 1]), m[:, 0], jnp.nan)
+        v = jnp.where(~jnp.isnan(d), d + v - s, v)
+    return v
+
+# %%
+def lookup_df(maps, v):
+    steps = maps.keys()
+    for step in steps:
+        m = maps[step].query('@v >= src_start and @v <= src_end')
+        if len(m) > 0:
+            v = (m.dst_start + v - m.src_start).values[0]
+    return v
+
+# %%
 def part1_sol(s):
     seeds, maps = parse(s)
-    steps = maps.keys()
-    res = []
+    map_arrays = {
+        k: jnp.array(v.loc[:, ['src_start', 'src_end', 'dst_start']].values) for k, v in maps.items()
+    }
+    res = np.inf
+    # j_lookup = jit(lambda x: lookup(map_arrays, x))
+
     for s in seeds:
-        v = s
-        s_res = [v]
-        for step in steps:
-            m = maps[step].query('@v >= src_start and @v <= src_end')
-            if len(m) > 0:
-                v = (m.dst_start + v - m.src_start).values[0]
-            s_res.append(v)
-        res.append(s_res)
-    return np.array(res)[:, -1].min()
+        # v = j_lookup(s)
+        v = lookup_df(maps, s)
+        if v < res:
+            res = v
+    return np.array(res).min()
 
 
 # %%
 def part2_sol(s):
     seed_intervals, maps = parse(s)
     seed_intervals = np.array(seed_intervals).reshape((-1, 2)).tolist()
-    steps = maps.keys()
-    res = np.inf
     count = 0
-    intervals = len(seed_intervals)
-    for si in seed_intervals:
+    this_intervals = seed_intervals
+    for s, m in maps.items():
         count += 1
-        print(f'Interval {count} of {intervals}')
-        for s in range(si[0], si[0]+si[1]):
-            v = s
-            for step in steps:
-                m = maps[step].query('@v >= src_start and @v <= src_end')
-                if len(m) > 0:
-                    v = (m.dst_start + v - m.src_start).values[0]
-            if v < res:
-                res = v
+        # print(f'Map {count} of {len(maps)}')
+        next_intervals = []
+        while len(this_intervals) > 0:
+            si = this_intervals.pop()
+            v = si[0]
+            ml = m.query('@v >= src_start and @v <= src_end')
+            if len(ml) > 0:
+                new_range = ml.range.values[0] - (v - ml.src_start.values[0])
+                this_range = min(si[1], new_range)
+                remaining_range = max(si[1] - new_range, 0)
+                mapped_interval = [ml.dst_start.values[0] + v - ml.src_start.values[0], this_range]
+                next_intervals.append(mapped_interval)
+                if remaining_range > 0:
+                    remaining_interval = [v + this_range, remaining_range]
+                    this_intervals.append(remaining_interval)
+                    # print(si, mapped_interval, remaining_interval)
+            else:
+                next_intervals.append(si)
+        # print(next_intervals)
+        this_intervals = next_intervals
 
-    return res
+    return np.array(this_intervals)[:, 0].min()
 
 
 # %%
