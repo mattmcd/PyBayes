@@ -4,10 +4,10 @@ import numpy as np
 import pandas as pd
 import re
 from io import StringIO
-from jax import jit
 import jax.numpy as jnp
 
 DATA_DIR = os.path.expanduser('~/Work/Data/AoC2023')
+
 
 # %%
 def read_input(day):
@@ -63,7 +63,7 @@ def get_maps(s):
     vals = []
     pat = r'(\w+)-to-(\w+) map:\n([\d \n]+)+(?:\n\n|$)'
     for m in re.finditer(pat, s):
-        vals.append((m.group(1), m.group(2), m.group(3) ))
+        vals.append((m.group(1), m.group(2), m.group(3)))
     out = {
         (src, dst): pd.read_table(
             StringIO(m), sep=' ', names=['dst_start', 'src_start', 'range']
@@ -94,6 +94,7 @@ def lookup(maps, v):
         v = jnp.where(~jnp.isnan(d), d + v - s, v)
     return v
 
+
 # %%
 def lookup_df(maps, v):
     steps = maps.keys()
@@ -103,12 +104,13 @@ def lookup_df(maps, v):
             v = (m.dst_start + v - m.src_start).values[0]
     return v
 
+
 # %%
 def part1_sol(s):
     seeds, maps = parse(s)
-    map_arrays = {
-        k: jnp.array(v.loc[:, ['src_start', 'src_end', 'dst_start']].values) for k, v in maps.items()
-    }
+    # map_arrays = {
+    #     k: jnp.array(v.loc[:, ['src_start', 'src_end', 'dst_start']].values) for k, v in maps.items()
+    # }
     res = np.inf
     # j_lookup = jit(lambda x: lookup(map_arrays, x))
 
@@ -133,12 +135,14 @@ def part2_sol(s):
         while len(this_intervals) > 0:
             si = this_intervals.pop()
             v = si[0]
-            ml = m.query('@v >= src_start and @v <= src_end')
+            # ml = m.query('@v >= src_start and @v <= src_end')  # 193ms per run on full input vs 88ms for .loc
+            ml = m.loc[(m.src_start <= v) & (m.src_end >= v), ['src_start', 'range', 'dst_start']].values
             if len(ml) > 0:
-                new_range = ml.range.values[0] - (v - ml.src_start.values[0])
+                src_start, r, dst_start = ml.flatten().tolist()
+                new_range = r - (v - src_start)
                 this_range = min(si[1], new_range)
-                remaining_range = max(si[1] - new_range, 0)
-                mapped_interval = [ml.dst_start.values[0] + v - ml.src_start.values[0], this_range]
+                remaining_range = si[1] - this_range
+                mapped_interval = [dst_start + v - src_start, this_range]
                 next_intervals.append(mapped_interval)
                 if remaining_range > 0:
                     remaining_interval = [v + this_range, remaining_range]
