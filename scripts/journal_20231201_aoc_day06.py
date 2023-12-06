@@ -53,23 +53,17 @@ def parse(s):
 # %%
 def solve_quad(T, d):
     y = np.sqrt(T ** 2 - 4 * (d + 1))
-    s1 = int(np.ceil((T - y) / 2))
-    s2 = int(np.floor((T + y) / 2))
-    n = s2 - s1 + 1
+    s1 = (np.ceil((T - y) / 2))
+    s2 = (np.floor((T + y) / 2))
+    n = (s2 - s1 + 1).astype(int)
     return n
 
 
 # %%
 def part1_sol(s):
     times, dists = parse(s)
-    # res = []
-    res = 1
-    for i in range(len(times)):
-        T = times[i]
-        d = dists[i]
-        # res.append([T, d, s1, s2, n])
-        res *= solve_quad(T, d)
-    return res
+    res = solve_quad(np.array(times), np.array(dists))
+    return res.prod()
 
 
 # %%
