@@ -6,7 +6,7 @@ from langchain.llms import Ollama
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
-import keras_core as keras
+import keras as keras
 
 # %%
 (x_train, y_train), (x_val, y_val) = keras.datasets.imdb.load_data() # num_words=vocab_size)
@@ -28,7 +28,7 @@ def sequence_to_sentence(seq):
 
 # %%
 llm = Ollama(
-    model="mistral",
+    model="zephyr:7b",
     # callback_manager=CallbackManager([StreamingStdOutCallbackHandler()])
 )
 
@@ -41,9 +41,11 @@ res = [
     llm(
         'Does the following review (delimited by ") express a positive sentiment: '
         + f'"{sequence_to_sentence(seq)}"'
-        + 'Please respond with a one sentence answer saying why starting with yes or no as appropriate.'
+        + 'Please respond with a single sentence answer saying why starting with yes or no as appropriate.'
     ) for seq in x_train[:10]
 ]
 
 # %%
-print(list(zip(y_train[:10], res)))
+for label, sentiment in list(zip(y_train[:10], res)):
+    print(f'Test: {"positive" if label == 1 else "negative"}  Prediction: {"positive" if sentiment[:3] == "Yes" else "negative"}')
+    print(sentiment)

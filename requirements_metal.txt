@@ -32,6 +32,7 @@ flax
 blackjax
 optax
 cvxpy
+pzflow
 # diffrax
 # equinox
 cvxpylayers
