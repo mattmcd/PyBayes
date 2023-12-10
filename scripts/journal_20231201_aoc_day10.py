@@ -2,7 +2,6 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import networkx as nx
 DATA_DIR = os.path.expanduser('~/Work/Data/AoC2023')
 
 
@@ -108,6 +107,12 @@ def parse(s):
 # %%
 def part1_sol(s):
     pipes, start_loc = parse(s)
+    visited = pipes_visited(pipes, start_loc)
+    count = len(visited)
+    return int(count/2)
+
+
+def pipes_visited(pipes, start_loc):
     l, r, u, d = [(0, -1), (0, 1), (-1, 0), (1, 0)]
     possible_first_steps = [s for s in [
         step(
@@ -115,60 +120,27 @@ def part1_sol(s):
         )(*start_loc) for loc in [l, r, u, d]] if s != start_loc]
     first_step_loc = possible_first_steps[0]
     # print(f'First step {first_step_loc}')
-    count = 1
     prev_loc = start_loc
     loc = first_step_loc
     visited = {start_loc}
     while loc not in visited:
-        # print(pipes[loc], loc)
         visited.add(loc)
         next_loc = step(pipes[loc], prev_loc)(*loc)
         prev_loc = loc
         loc = next_loc
-        count += 1
-
-    return int(count/2)
+    return visited
 
 
 # %%
 def part2_sol(s, do_plot=False):
     pipes, start_loc = parse(s)
-    l, r, u, d = [(0, -1), (0, 1), (-1, 0), (1, 0)]
-    possible_first_steps = [s for s in [
-        step(
-            pipes[start_loc], (start_loc[0] - loc[0], start_loc[1] - loc[1])
-        )(*start_loc) for loc in [l, r, u, d]] if s != start_loc]
-    first_step_loc = possible_first_steps[0]
-    # print(f'First step {first_step_loc}')
-    prev_loc = start_loc
-    loc = first_step_loc
-    visited = [start_loc]
-    while loc not in visited:
-        # print(pipes[loc], loc)
-        visited.append(loc)
-        next_loc = step(pipes[loc], prev_loc)(*loc)
-        prev_loc = loc
-        loc = next_loc
-
-    n_rows = max(i for i, _ in pipes.keys()) + 1
-    n_cols = max(j for _, j in pipes.keys()) + 1
+    visited = pipes_visited(pipes, start_loc)
     # Topological approach: points inside the curve will have an
     # odd number of crossings before reaching boundary.
     # To deal with flows between pipes expand the grid into an image
     # and choose a corner point for test in each tile so that it won't run
     # down a line of pipes.
-
-    img = np.zeros((n_rows*3, n_cols*3), dtype=bool)
-    tiles = {k: np.array(v).astype(bool) for k, v in {
-        '-': [[0,0,0], [1,1,1], [0,0,0]],
-        '|': [[0,1,0], [0,1,0], [0,1,0]],
-        'F': [[0,0,0], [0,1,1], [0,1,0]],
-        'L': [[0,1,0], [0,1,1], [0,0,0]],
-        'J': [[0,1,0], [1,1,0], [0,0,0]],
-        '7': [[0,0,0], [1,1,0], [0,1,0]]
-    }.items()}
-    for i, j in visited:
-        img[3*i:3*i+3, 3*j:3*j+3] = tiles[pipes[(i,j)]]
+    img = pipes_image(pipes, visited)
 
     # Crossing test using top right corner of each tile
     inside_test = (
@@ -183,6 +155,23 @@ def part2_sol(s, do_plot=False):
         plt.show()
 
     return inside
+
+
+def pipes_image(pipes, visited):
+    n_rows = max(i for i, _ in pipes.keys()) + 1
+    n_cols = max(j for _, j in pipes.keys()) + 1
+    img = np.zeros((n_rows * 3, n_cols * 3), dtype=bool)
+    tiles = {k: np.array(v).astype(bool) for k, v in {
+        '-': [[0, 0, 0], [1, 1, 1], [0, 0, 0]],
+        '|': [[0, 1, 0], [0, 1, 0], [0, 1, 0]],
+        'F': [[0, 0, 0], [0, 1, 1], [0, 1, 0]],
+        'L': [[0, 1, 0], [0, 1, 1], [0, 0, 0]],
+        'J': [[0, 1, 0], [1, 1, 0], [0, 0, 0]],
+        '7': [[0, 0, 0], [1, 1, 0], [0, 1, 0]]
+    }.items()}
+    for i, j in visited:
+        img[3 * i:3 * i + 3, 3 * j:3 * j + 3] = tiles[pipes[(i, j)]]
+    return img
 
 
 # %%
