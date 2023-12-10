@@ -170,7 +170,6 @@ def part2_sol(s, do_plot=False):
     for i, j in visited:
         img[3*i:3*i+3, 3*j:3*j+3] = np.array(tiles[pipes[(i,j)]]).astype(bool)
 
-    inside_img = img[::].astype(float)
     # Crossing test using top right corner of each tile
     inside_test = (
             (np.cumsum(img, axis=0)[::3, 2::3] % 2 == 1)  # Crossing test
