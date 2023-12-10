@@ -159,16 +159,16 @@ def part2_sol(s, do_plot=False):
     # down a line of pipes.
 
     img = np.zeros((n_rows*3, n_cols*3), dtype=bool)
-    tiles = {
+    tiles = {k: np.array(v).astype(bool) for k, v in {
         '-': [[0,0,0], [1,1,1], [0,0,0]],
         '|': [[0,1,0], [0,1,0], [0,1,0]],
         'F': [[0,0,0], [0,1,1], [0,1,0]],
         'L': [[0,1,0], [0,1,1], [0,0,0]],
         'J': [[0,1,0], [1,1,0], [0,0,0]],
         '7': [[0,0,0], [1,1,0], [0,1,0]]
-    }
+    }.items()}
     for i, j in visited:
-        img[3*i:3*i+3, 3*j:3*j+3] = np.array(tiles[pipes[(i,j)]]).astype(bool)
+        img[3*i:3*i+3, 3*j:3*j+3] = tiles[pipes[(i,j)]]
 
     # Crossing test using top right corner of each tile
     inside_test = (
@@ -183,6 +183,7 @@ def part2_sol(s, do_plot=False):
         plt.show()
 
     return inside
+
 
 # %%
 print(part1_sol(test_in_part1), test_out_part1)
