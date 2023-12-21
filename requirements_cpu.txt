@@ -35,6 +35,7 @@ cvxpy
 pzflow
 diffrax
 equinox
+distrax
 cvxpylayers
 antlr4-python3-runtime
 jupyter
@@ -48,6 +49,7 @@ pymc
 simpy
 langchain
 keras
+keras-core
 # dowhy
 # econml
 # pygraphviz  # See https://stackoverflow.com/questions/69970147/how-do-i-resolve-the-pygraphviz-error-on-mac-os

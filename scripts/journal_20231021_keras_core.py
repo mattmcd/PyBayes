@@ -50,8 +50,10 @@ model.summary()
 # %%
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(),
-    # optimizer=legacy_adam(learning_rate=1e-3),
-    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    optimizer=(
+        legacy_adam(learning_rate=1e-3) if BACKEND == 'tensorflow'
+        else keras.optimizers.Adam(learning_rate=1e-3)
+    ),
     metrics=[
         keras.metrics.SparseCategoricalAccuracy(name="acc"),
     ],
