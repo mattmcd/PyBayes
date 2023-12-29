@@ -138,17 +138,20 @@ class BinPosition(keras.layers.Layer):
         # (later) ah, no - keras.layers.Layer expects just the data, it's tfp.Bijector that
         # expects the bijector input dimension.  So could use this if we were constructing in
         # first pass of Bijector call but otherwise need to declare in ctor
-        self._dim_bijector_input = dim_bijector_input
+        self.dim_bijector_input = dim_bijector_input
         # Parameters of neural network
         self._n_hidden = n_hidden
         self._dim_hidden = dim_hidden
         self.net = None
-        self.shape = None
+        # self.shape = None
 
     def build(self, input_shape):
         def _bin_positions(x):
             out_shape = ops.concatenate(
-                [np.array(list(ops.shape(x)[:-1])), np.array([self._dim_bijector_input, self._n_bins])],
+                [
+                    ops.array(list(ops.shape(x)[:-1])),
+                    ops.array([self.dim_bijector_input, self._n_bins])
+                ],
                 0
             )
             x = ops.reshape(x, out_shape)
@@ -157,16 +160,13 @@ class BinPosition(keras.layers.Layer):
             ) + self._min_bin_width
 
         self.net = StackedDense(
-            n_out=self._dim_bijector_input * self._n_bins,
+            n_out=self.dim_bijector_input * self._n_bins,
             n_hidden=self._n_hidden, dim_hidden=self._dim_hidden, activation=_bin_positions, name='w'
         )
         self.net.build(input_shape=input_shape)
-        self.shape = self.net.compute_output_shape(input_shape)
+        # self.shape = self.net.compute_output_shape(input_shape)
 
     def call(self, inputs, *args, **kwargs):
-        # self._dim_bijector_input = dim_bijector_input
-        # if self.net is None:
-        #     self.build(*args, **kwargs)
         return self.net(inputs, *args, **kwargs)
 
 
@@ -189,35 +189,32 @@ class KnotSlope(keras.layers.Layer):
         # (later) ah, no - keras.layers.Layer expects just the data, it's tfp.Bijector that
         # expects the bijector input dimension.  So could use this if we were constructing in
         # first pass of Bijector call but otherwise need to declare in ctor
-        self._dim_bijector_input = dim_bijector_input
+        self.dim_bijector_input = dim_bijector_input
         # Parameters of neural network
         self._n_hidden = n_hidden
         self._dim_hidden = dim_hidden
         self.net = None
-        self.shape = None
+        # self.shape = None
 
     def build(self, input_shape):
         def _slopes(x):
             out_shape = ops.concatenate(
                 [
-                    np.array(list(ops.shape(x)[:-1])),
-                    np.array([self._dim_bijector_input, self._n_bins - 1])
+                    ops.array(list(ops.shape(x)[:-1])),
+                    ops.array([self.dim_bijector_input, self._n_bins - 1])
                 ], 0
             )
             x = ops.reshape(x, out_shape)
             return ops.softplus(x) + self._min_slope
 
         self.net = StackedDense(
-            n_out=self._dim_bijector_input * (self._n_bins - 1),
+            n_out=self.dim_bijector_input * (self._n_bins - 1),
             n_hidden=self._n_hidden, dim_hidden=self._dim_hidden,  activation=_slopes, name='s'
         )
         self.net.build(input_shape=input_shape)
-        self.shape = self.net.compute_output_shape(input_shape)
+        # self.shape = self.net.compute_output_shape(input_shape)
 
     def call(self, inputs, *args, **kwargs):
-        # self._dim_bijector_input = dim_bijector_input
-        # if self.net is None:
-        #     self.build(*args, **kwargs)
         return self.net(inputs, *args, **kwargs)
 
 
@@ -227,6 +224,18 @@ class SplineParams:
     bin_widths: BinPosition
     bin_heights: BinPosition
     knot_slopes: KnotSlope
+    built: bool = False
+
+    def __call__(self, x, dim_bijector_input, *args, **kwargs):
+        if not self.built:
+            self.bin_widths.dim_bijector_input = dim_bijector_input
+            self.bin_heights.dim_bijector_input = dim_bijector_input
+            self.knot_slopes.dim_bijector_input = dim_bijector_input
+        return tfb.RationalQuadraticSpline(
+            bin_widths=self.bin_widths(x),
+            bin_heights=self.bin_heights(x),
+            knot_slopes=self.knot_slopes(x)
+        )
 
 # %%
 # Learn mapping from base distribution to data dist
@@ -238,9 +247,9 @@ nsplits = 3
 
 xs = np.random.randn(10, 15).astype(np.float32)  # Keras won't Dense(.)(vec).
 splines = [
-    SplineParams(BinPosition(dim_bijector_input=15-5*i, name=f'bin_width_{i}'),
-                 BinPosition(dim_bijector_input=15-5*i, name=f'bin_height_{i}'),
-                 KnotSlope(dim_bijector_input=15-5*i, name=f'knot_slope_{i}')
+    SplineParams(BinPosition(name=f'bin_width_{i}'),
+                 BinPosition(name=f'bin_height_{i}'),
+                 KnotSlope(name=f'knot_slope_{i}')
                  ) for i in range(nsplits)
 ]
 
@@ -250,22 +259,18 @@ splines = [
 def spline_flow():
     stack = tfb.Identity()
     for i in range(nsplits):
-        bin_widths = splines[i].bin_widths
-        bin_heights = splines[i].bin_heights
-        knot_slopes = splines[i].knot_slopes
-        # Try building all SplineParams to avoid  problems with tfp not recognising keras.layers.Layers
-        # as tf.Module
-        _ = bin_widths(inputs=np.arange(15)[np.newaxis, :])
-        _ = bin_heights(inputs=np.arange(15)[np.newaxis, :])
-        _ = knot_slopes(inputs=np.arange(15)[np.newaxis, :])
+        # bin_widths = splines[i].bin_widths
+        # bin_heights = splines[i].bin_heights
+        # knot_slopes = splines[i].knot_slopes
+        # # Try building all SplineParams to avoid  problems with tfp not recognising keras.layers.Layers
+        # # as tf.Module
+        # _ = bin_widths(inputs=np.arange(15)[np.newaxis, :])
+        # _ = bin_heights(inputs=np.arange(15)[np.newaxis, :])
+        # _ = knot_slopes(inputs=np.arange(15)[np.newaxis, :])
 
         stack = tfb.RealNVP(
             num_masked=5 * i,
-            bijector_fn=tfb.RationalQuadraticSpline(
-                bin_widths=bin_widths,
-                bin_heights=bin_heights,
-                knot_slopes=knot_slopes
-            )
+            bijector_fn=splines[i]
         )(stack)
     return stack
 
@@ -286,49 +291,37 @@ x_m, y_m = make_moons(10_000)
 class MoonModel(keras.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.splines = [
-            SplineParams(
-                BinPosition(dim_bijector_input=1, name='bw_0'),
-                BinPosition(dim_bijector_input=1, name='bh_0'),
-                KnotSlope(dim_bijector_input=1, name='ks_0')
-            ),
-            SplineParams(
-                BinPosition(dim_bijector_input=1, name='bw_1'),
-                BinPosition(dim_bijector_input=1, name='bh_1'),
-                KnotSlope(dim_bijector_input=1, name='ks_1')
-            )
+        self.n_splines = 2
+        self.bin_widths = [
+            BinPosition(name=f'bw_{i}') for i in range(self.n_splines)
+        ]
+        self.bin_heights = [
+            BinPosition(name=f'bh_{i}') for i in range(self.n_splines)
+        ]
+        self.knot_slopes = [
+            KnotSlope(name=f'ks_{i}') for i in range(self.n_splines)
         ]
 
-        # Build spline parameter networks
-        for spline in self.splines:
-            _ = spline.bin_widths(inputs=np.arange(1)[np.newaxis, :])
-            _ = spline.bin_heights(inputs=np.arange(1)[np.newaxis, :])
-            _ = spline.knot_slopes(inputs=np.arange(1)[np.newaxis, :])
+        self.splines = [
+            SplineParams(
+                self.bin_widths[i], self.bin_heights[i], self.knot_slopes[i]
+            ) for i in range(self.n_splines)
+        ]
 
         nsf = tfb.Chain(
             [
                 tfb.Permute([1, 0], name='roll_1'),
                 tfb.RealNVP(
                     num_masked=1,
-                    bijector_fn=tfb.RationalQuadraticSpline(
-                        bin_widths=self.splines[1].bin_widths,
-                        bin_heights=self.splines[1].bin_heights,
-                        knot_slopes=self.splines[1].knot_slopes,
-                        name='rqs_1'
-                    ),
+                    bijector_fn=self.splines[1],
                     name='real_nvp_1'
                 ),
-                # tfb.Permute([1, 0], name='roll_0'),
-                # tfb.RealNVP(
-                #     num_masked=1,
-                #     bijector_fn=tfb.RationalQuadraticSpline(
-                #         bin_widths=self.splines[0].bin_widths,
-                #         bin_heights=self.splines[0].bin_heights,
-                #         knot_slopes=self.splines[0].knot_slopes,
-                #         name='rqs_0'
-                #     ),
-                #     name='real_nvp_0'
-                # ),
+                tfb.Permute([1, 0], name='roll_0'),
+                tfb.RealNVP(
+                    num_masked=1,
+                    bijector_fn=self.splines[0],
+                    name='real_nvp_0'
+                ),
                 # tfb.Scale(),
                 # tfb.Shift()
             ],
@@ -339,6 +332,10 @@ class MoonModel(keras.Model):
             bijector=nsf,
             name='flow'
         )
+
+        # # To try: Wrapping dist in DistributionLambda
+        # x = keras.layers.Input(shape=(None, 2))
+        # output = tfp.layers.DistributionLambda(self.flow)(x)
 
     def call(self, *inputs):
         return self.flow  # .bijector.forward(*inputs)
