@@ -22,9 +22,9 @@ pymde
 scikit-learn
 statsmodels
 networkx
-jax
-jaxlib==0.4.11  # Latest version
-jax-metal==0.0.4  # macOS 13+ 0.0.3, 14 0.0.4  # jax.numpy.linalg operations failing currently
+jax==0.4.20
+jaxlib==0.4.20  # Latest version
+jax-metal==0.0.5  # macOS 13+ 0.0.3, 14 0.0.4  # jax.numpy.linalg operations failing currently
 lifelines
 scikit-survival
 matlabengine==23.2.1

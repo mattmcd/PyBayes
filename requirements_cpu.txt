@@ -9,6 +9,7 @@ arviz
 # tensorflow-macos
 tensorflow-metal
 tensorflow-probability
+inference-gym
 tensorflow-datasets
 tensorflow-decision-forests
 # tensorflow-gnn
@@ -50,7 +51,10 @@ simpy
 langchain
 keras
 keras-core
-# dowhy
+dowhy
 # econml
 # pygraphviz  # See https://stackoverflow.com/questions/69970147/how-do-i-resolve-the-pygraphviz-error-on-mac-os
 streamlit
+snowflake-snowpark-python[pandas]
+spacy
+spacy-transformers
