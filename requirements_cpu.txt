@@ -6,7 +6,7 @@ sqlalchemy
 matplotlib
 seaborn
 arviz
-# tensorflow-macos
+tensorflow-macos
 tensorflow-metal
 tensorflow-probability
 inference-gym
@@ -58,3 +58,4 @@ streamlit
 snowflake-snowpark-python[pandas]
 spacy
 spacy-transformers
+mlx
