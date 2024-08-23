@@ -6,7 +6,8 @@ sqlalchemy
 matplotlib
 seaborn
 arviz
-tensorflow-macos
+tensorflow
+# tensorflow-macos
 tensorflow-metal
 tensorflow-probability
 inference-gym
@@ -46,11 +47,13 @@ ipywidgets
 jupytext
 arxiv
 pymc
+pymc-marketing
 # google-vizier  #  Conflict with SQLAlchemy 2.0 - works with 1.4
 simpy
 langchain
 keras
-keras-core
+# keras-core
+keras-nlp
 dowhy
 # econml
 # pygraphviz  # See https://stackoverflow.com/questions/69970147/how-do-i-resolve-the-pygraphviz-error-on-mac-os
@@ -60,3 +63,7 @@ spacy
 spacy-transformers
 mlx
 sentence-transformers
+swig
+gymnasium[classic-control,box2d,atari]
+rpy2
+# git+https://github.com/chebpy/chebpy.git
