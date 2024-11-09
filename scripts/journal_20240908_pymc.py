@@ -2,6 +2,7 @@
 from mattmcd.journal_20240908_pymc import Analysis, PropertyBasedModel
 from startup import np, pd, plt, sns, sm, smf
 import pymc as pm
+import pytensor.tensor as pt
 import arviz as az
 # %%
 analysis = Analysis()
@@ -38,3 +39,13 @@ with model2:
 az.plot_trace(trace, compact=False)
 plt.tight_layout()
 plt.show()
+
+# %%
+with pm.Model() as level_model1:
+    # level = pm.DiscreteUniform('level', lower=0, upper=100)
+    level = pm.Beta('level', alpha=1, beta=2)
+
+value = pt.scalar('value')
+
+# %%
+pm.logp(rv=level, value=value).eval({value: 0.9})
