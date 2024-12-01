@@ -1,0 +1,30 @@
+import os
+import pandas as pd
+from io import StringIO
+from sqlalchemy import MetaData
+
+from .io import pg_engine
+
+
+DATA_DIR = os.path.expanduser('~/Work/Data/AoC2024')
+
+def read_input(day):
+    with open(os.path.join(DATA_DIR, f'aoc2024_day{day:02}.txt'), 'r') as f:
+        return f.read()
+
+class Reader:
+    def __init__(self, day, data):
+        self.day = day
+        self.data : pd.DataFrame = data
+        self.engine = pg_engine()
+        self.metadata = MetaData()
+
+    def to_db(self):
+        self.data.to_sql(f'day{self.day:02}', con=self.engine, schema='aoc_2024', if_exists='replace')
+
+    @classmethod
+    def day01(cls):
+        data = [{'left_col': r.split()[0], 'right_col': r.split()[1]} for r in read_input(1).strip().split('\n')]
+        df = pd.DataFrame(data).astype(int)
+        return cls(1, df)
+

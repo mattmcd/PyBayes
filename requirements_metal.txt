@@ -52,3 +52,4 @@ keras
 # econml
 # pygraphviz  # See https://stackoverflow.com/questions/69970147/how-do-i-resolve-the-pygraphviz-error-on-mac-os
 streamlit
+psycopg2
