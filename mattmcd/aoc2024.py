@@ -28,3 +28,15 @@ class Reader:
         df = pd.DataFrame(data).astype(int)
         return cls(1, df)
 
+    @classmethod
+    def day02(cls):
+        data = []
+        record = 0
+        for line in read_input(2).strip().split('\n'):
+            position = 0
+            for level in line.split():
+                data.append({'record': record, 'position': position, 'level': level})
+                position += 1
+            record += 1
+        df = pd.DataFrame(data).astype(int)
+        return cls(2, df)
