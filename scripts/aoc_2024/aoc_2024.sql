@@ -116,13 +116,15 @@ with matches as (select regexp_matches(
                             when row_number() over () = 1 then 1
                             end              as enable_flag
                  from matches),
-     flagged_muls as (select mul * first_value(enable_flag) over (partition by flag_partition order by ind) as mul
+     flagged_muls as (select
+                          mul, first_value(enable_flag) over (partition by flag_partition order by ind) as flag,
+                          mul * first_value(enable_flag) over (partition by flag_partition order by ind) as flagged_mul
                       from (select ind
                                  , mul
                                  , enable_flag
                                  , sum(case when enable_flag is not null then 1 else 0 end)
                                    over (order by ind) as flag_partition
                             from numbers) o)
-select sum(mul)
+select sum(mul) as part_1, sum(flagged_mul) as part_2
 from flagged_muls
 ;
