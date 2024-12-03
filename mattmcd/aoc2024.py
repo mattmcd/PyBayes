@@ -2,7 +2,6 @@ import os
 import pandas as pd
 from io import StringIO
 from sqlalchemy import MetaData
-
 from .io import pg_engine
 
 
@@ -40,3 +39,9 @@ class Reader:
             record += 1
         df = pd.DataFrame(data).astype(int)
         return cls(2, df)
+
+    @classmethod
+    def day03(cls):
+        data = read_input(3).strip().split('\n')
+        df = pd.DataFrame({'program': data})
+        return cls(3, df)

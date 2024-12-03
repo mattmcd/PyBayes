@@ -92,3 +92,37 @@ where (invalid_down = 0)
    or (invalid_up = 0)
 ;
 
+-- Day 03 Part 1
+with muls as (select regexp_matches(string_agg(program, ''), 'mul\((\d+,\d+)\)', 'g') as numbers
+              from aoc_2024.day03)
+select sum(split_part(numbers[1], ',', 1)::integer * split_part(numbers[1], ',', 2)::integer)
+from muls
+;
+
+-- Day 03 Part 2
+with matches as (select regexp_matches(
+                                string_agg(program, '')
+                            , '((do)\(\)|mul\((\d+,\d+)\)|(don''t)\(\))', 'g'
+                        ) as token
+                 from aoc_2024.day03),
+     numbers as (select row_number() over () as ind,
+                        case
+                            when token[3] is not null then
+                                (split_part(token[3], ',', 1)::integer * split_part(token[3], ',', 2)::integer)
+                            end              as mul,
+                        case
+                            when token[2] is not null then 1
+                            when token[4] is not null then 0
+                            when row_number() over () = 1 then 1
+                            end              as enable_flag
+                 from matches),
+     flagged_muls as (select mul * first_value(enable_flag) over (partition by flag_partition order by ind) as mul
+                      from (select ind
+                                 , mul
+                                 , enable_flag
+                                 , sum(case when enable_flag is not null then 1 else 0 end)
+                                   over (order by ind) as flag_partition
+                            from numbers) o)
+select sum(mul)
+from flagged_muls
+;
