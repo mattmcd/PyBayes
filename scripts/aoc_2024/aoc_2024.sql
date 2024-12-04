@@ -116,9 +116,10 @@ with matches as (select regexp_matches(
                             when row_number() over () = 1 then 1
                             end              as enable_flag
                  from matches),
-     flagged_muls as (select
-                          mul, first_value(enable_flag) over (partition by flag_partition order by ind) as flag,
-                          mul * first_value(enable_flag) over (partition by flag_partition order by ind) as flagged_mul
+     flagged_muls as (select mul,
+                             first_value(enable_flag) over (partition by flag_partition order by ind) as flag,
+                             mul *
+                             first_value(enable_flag) over (partition by flag_partition order by ind) as flagged_mul
                       from (select ind
                                  , mul
                                  , enable_flag
@@ -127,4 +128,43 @@ with matches as (select regexp_matches(
                             from numbers) o)
 select sum(mul) as part_1, sum(flagged_mul) as part_2
 from flagged_muls
+;
+
+-- Day 4 Part 1
+with hv as (select x.row as xr, x.col as xc, s.row as sr, s.col as sc
+            from (select row, col from aoc_2024.day04 where letter = 'X') x
+                     join (select row, col from aoc_2024.day04 where letter = 'M') m
+                          on abs(x.row - m.row) + abs(x.col - m.col) = 1
+                     join (select row, col from aoc_2024.day04 where letter = 'A') a
+                          on abs(m.row - a.row) + abs(m.col - a.col) = 1
+                     join (select row, col from aoc_2024.day04 where letter = 'S') s
+                          on abs(a.row - s.row) + abs(a.col - s.col) = 1
+            where abs(x.row - a.row) + abs(x.col - a.col) = 2
+              and abs(m.row - s.row) + abs(m.col - s.col) = 2
+              and abs(x.row - s.row) + abs(x.col - s.col) = 3
+              and ((x.row = s.row) or (x.col = s.col))),
+     diag as (select x.row as xr, x.col as xc, s.row as sr, s.col as sc
+              from (select row, col from aoc_2024.day04 where letter = 'X') x
+                       join (select row, col from aoc_2024.day04 where letter = 'M') m
+                            on abs(x.row - m.row) + abs(x.col - m.col) = 2
+                       join (select row, col from aoc_2024.day04 where letter = 'A') a
+                            on abs(m.row - a.row) + abs(m.col - a.col) = 2
+                       join (select row, col from aoc_2024.day04 where letter = 'S') s
+                            on abs(a.row - s.row) + abs(a.col - s.col) = 2
+              where abs(x.row - a.row) + abs(x.col - a.col) = 4
+                and abs(m.row - s.row) + abs(m.col - s.col) = 4
+                and abs(x.row - s.row) + abs(x.col - s.col) = 6
+                and (abs(x.row - m.row) = abs(x.col - m.col))
+                and (abs(m.row - a.row) = abs(m.col - a.col))
+                and (abs(a.row - s.row) = abs(a.col - s.col))
+                and (abs(x.row - s.row) = abs(x.col - s.col))),
+     combined as (select distinct xr, xc, sr, sc
+                  from (select distinct xr, xc, sr, sc
+                        from hv
+                        union all
+                        select distinct xr, xc, sr, sc
+                        from diag) c
+                  order by xr, xc, sr, sc)
+select count(*)
+from combined
 ;
