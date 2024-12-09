@@ -168,3 +168,26 @@ with hv as (select x.row as xr, x.col as xc, s.row as sr, s.col as sc
 select count(*)
 from combined
 ;
+
+-- Day 04 Part 2
+with diag as (select m1.row as m1r, m1.col as m1c, s1.row as s1r, s1.col as s1c
+              from (select row, col from aoc_2024.day04_test where letter = 'A') a
+                       join (select row, col from aoc_2024.day04_test where letter = 'M') m1
+                            on abs(m1.row - a.row) + abs(m1.col - a.col) = 2
+                       join (select row, col from aoc_2024.day04_test where letter = 'M') m2
+                            on abs(m2.row - a.row) + abs(m2.col - a.col) = 2
+                       join (select row, col from aoc_2024.day04_test where letter = 'S') s1
+                            on abs(s1.row - a.row) + abs(s1.col - a.col) = 2
+                       join (select row, col from aoc_2024.day04_test where letter = 'S') s2
+                            on abs(s2.row - a.row) + abs(s2.col - a.col) = 2
+
+              where abs(m1.row - s1.row) + abs(m1.col - s1.col) = 4
+                and abs(m2.row - s2.row) + abs(m2.col - s2.col) = 4
+                and (abs(m1.row - s1.row) = abs(m1.col - s1.col))
+                and (abs(m2.row - s2.row) = abs(m2.col - s2.col))
+--                 and (m1.row != m2.row and m1.col != m2.col)
+
+    )
+select count(*)
+from diag
+;
