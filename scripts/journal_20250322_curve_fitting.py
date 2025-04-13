@@ -141,10 +141,17 @@ for rate in log_rate:
     jef.dense.kernel.value = jnp.array([[rate]])
     ds = jef(jnp.ones_like(df_s.DURATION.values.reshape(-1, 1)))
     # Observed lifetimes with censoring
-    y_obs = df_s.DURATION.values.reshape(-1, 1)
+    # Originally we set the duration of censored events to be the censoring time,
+    # it would be better to remove these events
+    # Alternative 1: clip duration at censoring time
+    # y_obs = df_s.DURATION.values.reshape(-1, 1)
+    # Alternative2:  removing censored observations
+    y_obs = df_s.loc[df_s.OBSERVED, :].DURATION.values.reshape(-1, 1)
+    ds_obs = jef(jnp.ones_like(y_obs))
+
     # Actual lifetimes
     y_act = df_s.LIFETIME.values.reshape(-1, 1)
-    res_obs.append(-ds.log_prob(y_obs).sum())
+    res_obs.append(-ds_obs.log_prob(y_obs).sum())
     res_actual.append(-ds.log_prob(y_act).sum())
 
 
@@ -166,7 +173,9 @@ log_rate = jnp.linspace(-4, -1, 1000)
 def calc_losses(rate):
     jef.dense.kernel.value = jnp.array([[rate]])
     ds = jef(jnp.ones_like(df_s.DURATION.values.reshape(-1, 1)))
-    return -ds.log_prob(df_s[['DURATION', 'LIFETIME']].values).sum(axis=0)
+    ll = ds.log_prob(df_s[['DURATION', 'LIFETIME']].values)
+    mask = df_s.OBSERVED.values  # Remove censored observations
+    return -jnp.hstack([ll[mask, 0].sum(), ll[:, 1].sum()])
 
 df_res = pd.DataFrame(
     jax.vmap(calc_losses)(log_rate), columns=['Observed', 'Actual']
@@ -184,6 +193,8 @@ plt.show()
 # %%
 # We see from the above parameter scan that only considering the observed decays
 # underestimates the lifetime.
+# Below we use a modified loss function to take this into account correctly and see that
+# the fit to Observed durations with censoring more closely matches the actual durations
 
 def calc_censored_losses(rate):
     jef.dense.kernel.value = jnp.array([[rate]])
