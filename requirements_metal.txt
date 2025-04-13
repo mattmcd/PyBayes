@@ -6,7 +6,7 @@ sqlalchemy
 matplotlib
 seaborn
 arviz
-# tensorflow-macos
+tensorflow-macos
 # tensorflow-metal  # Can have one of jax-metal or tensorflow-metal but not both
 tensorflow-probability
 tensorflow-datasets
@@ -53,3 +53,11 @@ keras
 # pygraphviz  # See https://stackoverflow.com/questions/69970147/how-do-i-resolve-the-pygraphviz-error-on-mac-os
 streamlit
 psycopg2
+mlx
+einops
+antlr4-tools
+open3d
+bambi
+pymc-marketing
+# mpld3
+pysd
