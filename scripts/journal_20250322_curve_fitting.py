@@ -117,6 +117,7 @@ class JaxExponentialFitter(nnx.Module):
         self.dense = nnx.Linear(
             in_features=1, out_features=1, rngs=rngs,
             kernel_init=initializers.ones_init(),  # for pass through manual scan
+            use_bias=False
         )
         self.dist = tfd.Exponential
 
@@ -220,8 +221,39 @@ plt.show()
 
 
 # %%
-def loss(network, y):
-    return -network.log_prob(y)
+# Using nnx to fit
+jef = JaxExponentialFitter(nnx.Rngs(params=0))
+optimizer = nnx.Optimizer(jef, optax.adam(1e-1))
+
+@nnx.jit
+def train_step(model, optimizer, x, t, obs):
+    def loss_fn(model):
+        dist = model(x)
+        ll = jnp.where(obs, dist.log_prob(t), dist.log_survival_function(t))
+        return -ll.sum()
+    loss, grads = nnx.value_and_grad(loss_fn)(model)
+    optimizer.update(grads)
+    return loss
+
+
+# %%
+steps = range(250)
+est_lambda = []
+for i in steps:
+    df_f = df_s.sample(1024)
+    t = jnp.array(df_f['DURATION'].values)
+    obs = jnp.array(df_f['OBSERVED'].values)
+    x = jnp.ones((len(t), 1), jnp.float32)
+
+    loss = train_step(jef, optimizer, x, t, obs)
+    est_lambda.append(jnp.exp(-jef.dense.kernel.value))
+
+# Plot convergence of estimate of lambda
+est_lambda = jnp.squeeze(jnp.array(est_lambda))
+print(jnp.exp(-jef.dense.kernel.value))
+ax = sns.lineplot(x=steps, y=est_lambda, label=r'Estimate of $\lambda$')
+ax.axhline(y=actual_lifetime, color='k', linestyle='--')
+plt.show()
 
 # %%
 # learning_rate = 0.005
