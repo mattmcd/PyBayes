@@ -48,6 +48,7 @@ jupytext
 arxiv
 pymc
 pymc-marketing
+
 # google-vizier  #  Conflict with SQLAlchemy 2.0 - works with 1.4
 simpy
 langchain

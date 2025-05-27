@@ -59,5 +59,7 @@ antlr4-tools
 open3d
 bambi
 pymc-marketing
+pymc-experimental
+sympytensor
 # mpld3
 pysd
