@@ -6,11 +6,9 @@ sqlalchemy
 matplotlib
 seaborn
 arviz
-tensorflow
-# tensorflow-macos
-tensorflow-metal
+tensorflow-macos
+# tensorflow-metal  # Can have one of jax-metal or tensorflow-metal but not both
 tensorflow-probability
-inference-gym
 tensorflow-datasets
 tensorflow-decision-forests
 # tensorflow-gnn
@@ -24,9 +22,9 @@ pymde
 scikit-learn
 statsmodels
 networkx
-jax
-jaxlib  # Latest version
-# jax-metal==0.0.4  # macOS 13+ 0.0.3, 14 0.0.4  # jax.numpy.linalg operations failing currently
+jaxlib==0.4.34  # Latest version
+jax==0.4.34
+jax-metal==0.1.1  # macOS 13+ 0.0.3, 14 0.0.4  # jax.numpy.linalg operations failing currently
 lifelines
 scikit-survival
 matlabengine==23.2.1
@@ -35,9 +33,8 @@ blackjax
 optax
 cvxpy
 pzflow
-diffrax
-equinox
-distrax
+# diffrax
+# equinox
 cvxpylayers
 antlr4-python3-runtime
 jupyter
@@ -45,26 +42,26 @@ jupyterlab
 ipython
 ipywidgets
 jupytext
+kagglehub
 arxiv
 pymc
-pymc-marketing
-
 # google-vizier  #  Conflict with SQLAlchemy 2.0 - works with 1.4
 simpy
 langchain
 keras
-# keras-core
-keras-nlp
-dowhy
+# dowhy
 # econml
 # pygraphviz  # See https://stackoverflow.com/questions/69970147/how-do-i-resolve-the-pygraphviz-error-on-mac-os
 streamlit
-snowflake-snowpark-python[pandas]
-spacy
-spacy-transformers
+psycopg2
 mlx
-sentence-transformers
-swig
-gymnasium[classic-control,box2d,atari]
-rpy2
-# git+https://github.com/chebpy/chebpy.git
+einops
+antlr4-tools
+open3d
+bambi
+pymc-marketing
+pymc-experimental
+sympytensor
+# mpld3
+pysd
+datasets
