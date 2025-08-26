@@ -3,7 +3,9 @@ import os
 import numpy as np
 # Set KERAS_BACKEND="jax" or "tensorflow" or "torch" in environment
 import keras
-from journal_20231025_keras_core_jax_metal import wrap_jax_metal
+from keras import Model
+from keras.layers import Input, Dense, Flatten
+from kymatio.keras import Scattering2D
 import tensorflow as tf
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 legacy_adam = tf.keras.optimizers.legacy.Adam
@@ -19,8 +21,8 @@ print(f'Using backend {BACKEND}')
 x_train = x_train.astype("float32") / 255
 x_test = x_test.astype("float32") / 255
 # Make sure images have shape (28, 28, 1)
-x_train = np.expand_dims(x_train, -1)
-x_test = np.expand_dims(x_test, -1)
+# x_train = np.expand_dims(x_train, -1)
+# x_test = np.expand_dims(x_test, -1)
 print("x_train shape:", x_train.shape)
 print("y_train shape:", y_train.shape)
 print(x_train.shape[0], "train samples")
@@ -29,41 +31,31 @@ print(x_test.shape[0], "test samples")
 # %%
 # Model parameters
 num_classes = 10
-input_shape = (28, 28, 1)
+input_shape = (28, 28)
 
-model = keras.Sequential(
-    [
-        keras.layers.Input(shape=input_shape),
-        keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
-        keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
-        keras.layers.MaxPooling2D(pool_size=(2, 2)),
-        keras.layers.Conv2D(128, kernel_size=(3, 3), activation="relu"),
-        keras.layers.Conv2D(128, kernel_size=(3, 3), activation="relu"),
-        keras.layers.GlobalAveragePooling2D(),
-        keras.layers.Dropout(0.5),
-        keras.layers.Dense(num_classes, activation="softmax"),
-    ]
-)
+inputs = Input(shape=input_shape)
+# J = number of length scales, L = number of angles
+x = Scattering2D(J=3, L=8)(inputs)
+x = Flatten()(x)
+x_out = Dense(num_classes, activation='softmax')(x)
+model = Model(inputs, x_out)
 
 # %%
 model.summary()
 
 # %%
 model.compile(
-    loss=keras.losses.SparseCategoricalCrossentropy(),
-    optimizer=(
-        # legacy_adam(learning_rate=1e-3) if BACKEND == 'tensorflow'
-        # else
-        keras.optimizers.Adam(learning_rate=1e-3)
-    ),
-    metrics=[
-        keras.metrics.SparseCategoricalAccuracy(name="acc"),
-    ],
-    jit_compile=False  # JIT=False -> TF 130ms/it, JAX 240ms/it.  =True 167ms/it, 240ms/it
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
 )
-
 # %%
 print(f'JIT compile: {model.jit_compile}')
+
+# %%
+# model.fit(x_train[:10000], y_train[:10000], epochs=15,
+#           batch_size=64, validation_split=0.2)
+
 # %%
 batch_size = 128
 epochs = 20
@@ -85,7 +77,7 @@ score = model.evaluate(x_test, y_test, verbose=0)
 print(score)
 
 # %%
-model.save(f'keras_core_final_model_{BACKEND}.keras')
+model.save(f'keras_wavelets_final_model_{BACKEND}_20250824.keras')
 
 # %%
 predictions = model.predict(x_test)
