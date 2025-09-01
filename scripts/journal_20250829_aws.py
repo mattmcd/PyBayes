@@ -3,6 +3,8 @@ import boto3
 import requests
 from botocore.exceptions import ClientError
 import os
+import subprocess
+from pathlib import Path
 
 # %%
 def auth_current_ip(security_group, ip):
@@ -65,6 +67,40 @@ class SecurityGroupIpUpdater:
 
 
 # %%
+class InstanceConnection:
+    def __init__(self, instance, key_file):
+        self.instance = instance
+        self.key_file = key_file
+
+    def start(self):
+        self.instance.start()
+
+    def stop(self):
+        self.instance.stop()
+
+    @property
+    def is_running(self):
+        return self.instance.state['Name'] == 'running'
+
+    def tunnel(self):
+        ssh_cmd = (
+            f'ssh -N -L 3128:localhost:3128 -i "{self.key_file}" '
+            f'ubuntu@{self.instance.public_dns_name}'
+        )
+        # Still fiddling with this to keep tunnel open rather than just
+        # executing tunnel command and then immediately closing it when subprocess exits.
+        return subprocess.run(ssh_cmd.split(' '), capture_output=True)
+
+    @classmethod
+    def from_env(cls):
+        ec2 = boto3.resource('ec2')
+        instance = ec2.Instance(os.environ['AWS_INSTANCE_ID'])
+        key_file = (Path.home() / os.environ['AWS_KEY_FILE']).resolve().as_posix()
+        return cls(instance, key_file)
+
+
+# %%
 if __name__ == '__main__':
     updater = SecurityGroupIpUpdater.from_env()
     updater.update()
+    conn = InstanceConnection.from_env()
