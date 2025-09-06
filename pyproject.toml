@@ -66,6 +66,8 @@ dependencies = [
     "boto3==1.40.20",
     "boto3-stubs==1.40.21",
     "python-dotenv==1.1.1",
+    "dowhy>=0.12",
+    "econml>=0.16.0",
 ]
 
 [tool.uv]

@@ -89,7 +89,8 @@ class InstanceConnection:
         )
         # Still fiddling with this to keep tunnel open rather than just
         # executing tunnel command and then immediately closing it when subprocess exits.
-        return subprocess.run(ssh_cmd.split(' '), capture_output=True)
+        # return subprocess.run(ssh_cmd.split(' '), capture_output=True)
+        print(ssh_cmd)
 
     @classmethod
     def from_env(cls):
@@ -104,3 +105,4 @@ if __name__ == '__main__':
     updater = SecurityGroupIpUpdater.from_env()
     updater.update()
     conn = InstanceConnection.from_env()
+    conn.tunnel()
