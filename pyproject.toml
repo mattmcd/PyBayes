@@ -68,6 +68,11 @@ dependencies = [
     "python-dotenv==1.1.1",
     "dowhy>=0.12",
     "econml>=0.16.0",
+    "guppylang>=0.20.0",
+    "mcp>=1.16.0",
+    "langchain-ollama>=0.3.10",
+    "loguru>=0.7.3",
+    "mcp-use>=1.3.11",
 ]
 
 [tool.uv]
