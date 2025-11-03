@@ -5,15 +5,82 @@ from startup import np, pd, plt, sns, sm, smf, os, Path
 from collections import defaultdict
 from scipy.stats import beta
 import itertools
+import ydf
+from sklearn.manifold import TSNE
 # %%
+# Census income dataset: https://archive.ics.uci.edu/dataset/2/adult
 data_dir = Path.home() / 'Work' / 'Data' / 'uci_adult'
 df_train = pd.read_csv(data_dir / "adult_train.csv")
 df_test = pd.read_csv(data_dir / "adult_test.csv")
 
 # %%
+plot_dir = Path.home() / 'Work' / 'Projects'/ 'priv-obsidian-vault' / 'Work' / 'img'
+
+# %%
 categorical_vars = df_train.dtypes.pipe(lambda x: x[x == 'object']).index.tolist()
 target = 'income'
 
+# %%
+# Analyst-style segmentation
+df_segment = df_train.assign(
+    high_income=lambda x: x[target] == '>50K'
+).groupby(['occupation']).high_income.mean()
+
+g = sns.barplot(df_segment.sort_values(ascending=False), orient='h')
+plt.title('Probability( High Income | Occupation )')
+plt.tight_layout()
+plt.show()
+g.figure.savefig(plot_dir / 'high_income_given_occupation_20251103.png')
+# %%
+# Use a RF model to get an idea of important variables
+
+def eda_variables(df_train, df_test, target, top_n=None):
+    model = ydf.RandomForestLearner(label=target).train(df_train)
+    evaluation = model.evaluate(df_test)
+
+    print(f'ROC AUC: {evaluation.characteristics[0].roc_auc:0.2f}')
+    print(pd.DataFrame(model.variable_importances()['INV_MEAN_MIN_DEPTH']).head(top_n))
+    df_p = df_test.sample(frac=0.2)
+    manifold = TSNE(n_components=2).fit_transform(model.distance(df_p, df_p))
+    sns.scatterplot(x=manifold[:, 0], y=manifold[:, 1], hue=df_p[target], alpha=0.2)
+    plt.title(
+        f'ROC AUC: {evaluation.characteristics[0].roc_auc:0.2f}'
+    )
+
+# %%
+# Class version
+class ModelBasedAnalysis:
+    def __init__(self, df_train, df_test, target):
+        self.df_train = df_train
+        self.df_test = df_test
+        self.target = target
+        self.model =  ydf.RandomForestLearner(label=target).train(df_train)
+        self.evaluation = self.model.evaluate(df_test)
+
+    def variable_importance(self):
+        return pd.DataFrame(self.model.variable_importances()['INV_MEAN_MIN_DEPTH'])
+
+    def __repr__(self):
+        out_str = f'ROC AUC: {self.evaluation.characteristics[0].roc_auc:0.2f}'
+        return out_str
+
+    def plot(self):
+        df_p = self.df_test.sample(frac=0.2)
+        manifold = TSNE(n_components=2).fit_transform(self.model.distance(df_p, df_p))
+        sns.scatterplot(x=manifold[:, 0], y=manifold[:, 1], hue=df_p[target], alpha=0.2)
+        plt.title(
+            f'ROC AUC: {self.evaluation.characteristics[0].roc_auc:0.2f}'
+        )
+
+
+# %%
+print('Using all features:')
+eda_variables(df_train, df_test, target, 7)
+plt.show()
+
+print('Using only categorical features features:')
+eda_variables(df_train.loc[:, categorical_vars], df_test, target, 7)
+plt.show()
 # %%
 df_a = df_train.loc[:, categorical_vars].assign(
     label=lambda x: x[target] == '>50K'
@@ -90,11 +157,13 @@ def bayes_rule(df, df_s):
     :param df_s: dataframe of sub population
     :return:
     """
-    # Could use beta distributions for these or beta binomial conjugate prior
+    # Alternatively, could use beta distributions for these to get confidence intervals
     p_sub_pop = df_s.trials.sum() / df.trials.sum()
     p_target = df.successes.sum() / df.trials.sum()
     p_target_given_sub_pop = df_s.successes.sum() / df_s.trials.sum()
     p_sub_pop_given_target = p_target_given_sub_pop * p_sub_pop / p_target
+    # Or more simply: p_sub_pop_given_target = df_s.successes.sum()/df.successes.sum()
+    # i.e. fraction of successes in sub-population as a fraction of successes in full population
     return p_target, p_sub_pop, p_target_given_sub_pop, p_sub_pop_given_target
 
 # %%
@@ -135,7 +204,9 @@ class BayesRule:
             self.p_target_given_sub_pop, self.p_sub_pop_given_target
         )
 
-
+# %%
+pop_slice = {'occupation': ['Exec-managerial'] }
+print(BayesRule(df_a, pop_slice, 'Income > 50K'))
 
 # %%
 pop_slice = {'sex': ['Male'], 'occupation': ['Exec-managerial'] }
@@ -168,16 +239,28 @@ def marginalize(df, groups):
     df_marginal_probs = pd.DataFrame(
         [sp | {'prob': BayesRule(df, sp).p_sub_pop_given_target} for sp in sub_pops]
     )
-    return df_marginal_probs#.fillna(0)
+    return df_marginal_probs   #.fillna(0)  # leaving in NaN makes excluded groups more obvious
 
+# %%
+groups = ['occupation']
+df_m = marginalize(df_a, groups)
+df_m.set_index(groups, inplace=True)
+
+g = sns.barplot(df_m['prob'].sort_values(ascending=False), orient='h')
+plt.title('Probability( Occupation | High Income )')
+plt.tight_layout()
+plt.show()
+g.figure.savefig(plot_dir / 'occupation_given_high_income_20251103.png')
 # %%
 groups = ['sex', 'relationship']
 groups = ['sex', 'race']
+groups = ['education', 'occupation']
 df_m = marginalize(df_a, groups)
 df_m.set_index(groups, inplace=True)
 print(df_m.sum())
 
 # %%
+fig, ax = plt.subplots(figsize=(10, 10))
 g = sns.heatmap(df_m.prob.unstack().T, annot=True, cmap='viridis', fmt='.2f')
 g.set_title('P(group| Income >50k)')
 plt.tight_layout()
