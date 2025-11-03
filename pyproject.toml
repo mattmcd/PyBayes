@@ -47,7 +47,7 @@ dependencies = [
     "pymc",
     "simpy",
     "langchain",
-    "keras==3.11.3",
+    "keras==3.12.0",
     "streamlit",
     "psycopg2-binary",
     "mlx",
