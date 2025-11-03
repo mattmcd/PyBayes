@@ -7,6 +7,8 @@ from scipy.stats import beta
 import itertools
 import ydf
 from sklearn.manifold import TSNE
+from journal_20251031_bayes_functions import BayesRule, marginalize
+from journal_20251031_ydf_functions import ModelBasedAnalysis
 # %%
 # Census income dataset: https://archive.ics.uci.edu/dataset/2/adult
 data_dir = Path.home() / 'Work' / 'Data' / 'uci_adult'
@@ -49,38 +51,26 @@ def eda_variables(df_train, df_test, target, top_n=None):
 
 # %%
 # Class version
-class ModelBasedAnalysis:
-    def __init__(self, df_train, df_test, target):
-        self.df_train = df_train
-        self.df_test = df_test
-        self.target = target
-        self.model =  ydf.RandomForestLearner(label=target).train(df_train)
-        self.evaluation = self.model.evaluate(df_test)
-
-    def variable_importance(self):
-        return pd.DataFrame(self.model.variable_importances()['INV_MEAN_MIN_DEPTH'])
-
-    def __repr__(self):
-        out_str = f'ROC AUC: {self.evaluation.characteristics[0].roc_auc:0.2f}'
-        return out_str
-
-    def plot(self):
-        df_p = self.df_test.sample(frac=0.2)
-        manifold = TSNE(n_components=2).fit_transform(self.model.distance(df_p, df_p))
-        sns.scatterplot(x=manifold[:, 0], y=manifold[:, 1], hue=df_p[target], alpha=0.2)
-        plt.title(
-            f'ROC AUC: {self.evaluation.characteristics[0].roc_auc:0.2f}'
-        )
-
+# (2025-11-03: Code moved to journal_20251103_ydf_functions.py)
 
 # %%
 print('Using all features:')
-eda_variables(df_train, df_test, target, 7)
+all_features_analysis = ModelBasedAnalysis(df_train, df_test, target)
+print(all_features_analysis)
+print(all_features_analysis.variable_importance().head(10))
+fig = all_features_analysis.plot()
 plt.show()
+fig.savefig(plot_dir / 'all_features_20251103.png')
 
+# %%
 print('Using only categorical features features:')
-eda_variables(df_train.loc[:, categorical_vars], df_test, target, 7)
+categorical_features_analysis = ModelBasedAnalysis(df_train.loc[:, categorical_vars], df_test, target)
+print(categorical_features_analysis)
+print(categorical_features_analysis.variable_importance().head(10))
+fig = categorical_features_analysis.plot()
 plt.show()
+fig.savefig(plot_dir / 'categorical_features_20251103.png')
+
 # %%
 df_a = df_train.loc[:, categorical_vars].assign(
     label=lambda x: x[target] == '>50K'
@@ -134,75 +124,8 @@ print(f'P(>50K|male) = {p_inc_given_male:.3f}')
 print(f'P(male| >50K) = {p_male_given_inc:.3f}')
 
 # %%
-# Generalise to look up multiple categorical values
-def extract_sub_population(df, sub_pop):
-    level_names = df.index.names
-    index_factory = defaultdict(lambda: slice(None))
-
-    for k, v in sub_pop.items():
-        index_factory[k] = v
-
-    pop_indexer = tuple([index_factory[c] for c in level_names])
-
-    try:
-        return df.loc[pop_indexer, :]
-    except KeyError:
-        return pd.DataFrame({'trials': [0], 'successes': [0]},)
-
-# %%
-def bayes_rule(df, df_s):
-    """Apply Bayes rule to estimate probability of target given sub population
-
-    :param df: dataframe of full population with columns 'trials' and 'successes'
-    :param df_s: dataframe of sub population
-    :return:
-    """
-    # Alternatively, could use beta distributions for these to get confidence intervals
-    p_sub_pop = df_s.trials.sum() / df.trials.sum()
-    p_target = df.successes.sum() / df.trials.sum()
-    p_target_given_sub_pop = df_s.successes.sum() / df_s.trials.sum()
-    p_sub_pop_given_target = p_target_given_sub_pop * p_sub_pop / p_target
-    # Or more simply: p_sub_pop_given_target = df_s.successes.sum()/df.successes.sum()
-    # i.e. fraction of successes in sub-population as a fraction of successes in full population
-    return p_target, p_sub_pop, p_target_given_sub_pop, p_sub_pop_given_target
-
-# %%
-def long_summary(pop_slice, target, p_target, p_sub_pop, p_target_given_sub_pop, p_sub_pop_given_target):
-    """Summary of sub-population probabilities including level values in description"""
-    slice_str = ', '.join({ k: f'{k}={" or ".join(v)}' for k, v in pop_slice.items()}.values())
-    return f'{pop_slice}\n' \
-           f'P({target}) = {p_target:.3f}\n' \
-           f'P({slice_str}) = {p_sub_pop:.3f}\n' \
-           f'P({target} | {slice_str}) = {p_target_given_sub_pop:.3f}\n' \
-           f'P({slice_str} | {target}) = {p_sub_pop_given_target:.3f}\n' \
-           f'Odds ratio = {p_sub_pop_given_target/(1 - p_sub_pop_given_target):.3f}:1'
-
-def brief_summary(pop_slice, target, p_target, p_sub_pop, p_target_given_sub_pop, p_sub_pop_given_target):
-    """Summary of sub-population probabilities with level names in description"""
-    return f'{pop_slice}\n' \
-           f'P({target}) = {p_target:.3f}\n' \
-           f'P({", ".join(pop_slice.keys())}) = {p_sub_pop:.3f}\n' \
-           f'P({target} | {", ".join(pop_slice.keys())}) = {p_target_given_sub_pop:.3f}\n' \
-           f'P({", ".join(pop_slice.keys())} | {target}) = {p_sub_pop_given_target:.3f}\n' \
-           f'Odds ratio = {p_sub_pop_given_target/(1 - p_sub_pop_given_target):.3f}:1'
-
-# %%
-class BayesRule:
-    def __init__(self, df, sub_pop, target_label='target', summary_type='long'):
-        self.df = df
-        self.sub_pop = sub_pop
-        self.target_label = target_label
-        self.df_s = extract_sub_population(self.df, self.sub_pop)
-        self.p_target, self.p_sub_pop, self.p_target_given_sub_pop, self.p_sub_pop_given_target = \
-            bayes_rule(self.df, self.df_s)
-        self.summary_fun = long_summary if summary_type == 'long' else brief_summary
-
-    def __repr__(self):
-        return self.summary_fun(
-            self.sub_pop, self.target_label,
-            self.p_target, self.p_sub_pop,
-            self.p_target_given_sub_pop, self.p_sub_pop_given_target
-        )
+# Generalised Bayes rule functions
+# (2025-11-03: Code moved to journal_20251103_bayes_functions.py)
 
 # %%
 pop_slice = {'occupation': ['Exec-managerial'] }
@@ -230,16 +153,7 @@ print(BayesRule(df_a, pop_slice, 'Income > 50K'))
 # Easy way is to find all the values in the specified levels and loop, may be enough for a first pass.
 # Vectorised would be nicer though :)
 
-# %%
-def marginalize(df, groups):
-    sub_pops = [
-        dict(zip(groups, g)) for g in
-        itertools.product(*[df.index.unique(level=g).tolist() for g in groups])
-    ]
-    df_marginal_probs = pd.DataFrame(
-        [sp | {'prob': BayesRule(df, sp).p_sub_pop_given_target} for sp in sub_pops]
-    )
-    return df_marginal_probs   #.fillna(0)  # leaving in NaN makes excluded groups more obvious
+# (2025-11-03: Code moved to journal_20251103_bayes_functions.py)
 
 # %%
 groups = ['occupation']
@@ -251,10 +165,12 @@ plt.title('Probability( Occupation | High Income )')
 plt.tight_layout()
 plt.show()
 g.figure.savefig(plot_dir / 'occupation_given_high_income_20251103.png')
+
 # %%
 groups = ['sex', 'relationship']
 groups = ['sex', 'race']
 groups = ['education', 'occupation']
+groups = ['education', 'workclass']
 df_m = marginalize(df_a, groups)
 df_m.set_index(groups, inplace=True)
 print(df_m.sum())
