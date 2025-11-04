@@ -25,8 +25,8 @@ class ModelBasedAnalysis:
 
     def plot(self):
         df_p = self.df_test.sample(frac=0.2)
-        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(10, 5), width_ratios=[0.4, 0.6])
-        manifold = TSNE(n_components=2).fit_transform(self.model.distance(df_p, df_p))
+        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4), width_ratios=[0.4, 0.6])
+        manifold = TSNE(n_components=2, random_state=123).fit_transform(self.model.distance(df_p, df_p))
         ax = axs[1]
         sns.scatterplot(x=manifold[:, 0], y=manifold[:, 1], hue=df_p[self.target], alpha=0.2, ax=ax)
         ax.set_title(
@@ -39,5 +39,5 @@ class ModelBasedAnalysis:
             orient='h', ax=ax
         )
         ax.set_title('Variable Importance')
-        plt.tight_layout()
+        plt.tight_layout(pad=2)
         return fig

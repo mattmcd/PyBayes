@@ -7,7 +7,7 @@ from scipy.stats import beta
 import itertools
 import ydf
 from sklearn.manifold import TSNE
-from journal_20251031_bayes_functions import BayesRule, marginalize
+from journal_20251031_bayes_functions import BayesRule, marginalize, aggregate_data
 from journal_20251031_ydf_functions import ModelBasedAnalysis
 # %%
 # Census income dataset: https://archive.ics.uci.edu/dataset/2/adult
@@ -60,7 +60,7 @@ print(all_features_analysis)
 print(all_features_analysis.variable_importance().head(10))
 fig = all_features_analysis.plot()
 plt.show()
-fig.savefig(plot_dir / 'all_features_20251103.png')
+fig.savefig(plot_dir / 'all_features_20251103_header.png')
 
 # %%
 print('Using only categorical features features:')
@@ -71,14 +71,10 @@ fig = categorical_features_analysis.plot()
 plt.show()
 fig.savefig(plot_dir / 'categorical_features_20251103.png')
 
+
 # %%
-df_a = df_train.loc[:, categorical_vars].assign(
-    label=lambda x: x[target] == '>50K'
-).groupby(
-    [c for c in categorical_vars if c != target]
-).agg(
-    trials=pd.NamedAgg(column='label', aggfunc='count'),
-    successes=pd.NamedAgg(column='label', aggfunc='sum')
+df_a = aggregate_data(
+    df_train, categorical_vars, target, lambda x: x[target] == '>50K'
 )
 
 # %%
