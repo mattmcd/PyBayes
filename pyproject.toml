@@ -79,6 +79,7 @@ dependencies = [
     "chirho[extras]>=0.3.0",
     "numpyro>=0.19.0",
     "giotto-tda>=0.6.2",
+    "kaggle>=1.7.4.5",
 ]
 
 [tool.uv]
