@@ -35,3 +35,13 @@ class Reader:
             } for r in read_input(1, is_test).strip().split('\n')]
         df = pd.DataFrame(data)
         return cls(1, df)
+
+    @classmethod
+    def day02(cls, is_test=False):
+        data = [
+            {
+                'start': int(r.split('-')[0]),
+                'end': int(r.split('-')[1])
+            } for r in read_input(2, is_test).strip().split(',')]
+        df = pd.DataFrame(data)
+        return cls(2, df)
