@@ -1,4 +1,6 @@
 import os
+
+import numpy as np
 import pandas as pd
 from io import StringIO
 from sqlalchemy import MetaData
@@ -45,3 +47,9 @@ class Reader:
             } for r in read_input(2, is_test).strip().split(',')]
         df = pd.DataFrame(data)
         return cls(2, df)
+
+    @classmethod
+    def day03(cls, is_test=False):
+        data = read_input(3, is_test).strip().split('\n')
+        df = np.array([np.array([*line], dtype=int) for line in data])
+        return cls(3, df)
