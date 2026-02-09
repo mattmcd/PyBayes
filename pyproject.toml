@@ -82,6 +82,12 @@ dependencies = [
     "kaggle>=1.7.4.5",
     "pgmpy>=1.0.0",
     "pyro-ppl>=1.9.1",
+    "sentence-transformers>=5.2.2",
+    "spacy>=3.8.11",
+    "nltk>=3.9.2",
+    "pgvector>=0.4.2",
+    "psycopg>=3.3.2",
+    "tf-keras>=2.16.0",
 ]
 
 [tool.uv]
