@@ -88,6 +88,9 @@ dependencies = [
     "pgvector>=0.4.2",
     "psycopg>=3.3.2",
     "tf-keras>=2.16.0",
+    "pyrefly>=0.60.0",
+    "torchcodec",
+    "peft"
 ]
 
 [tool.uv]

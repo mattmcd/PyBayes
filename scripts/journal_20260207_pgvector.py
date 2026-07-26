@@ -32,10 +32,11 @@ register_vector(conn)
 
 # %%
 conn.execute('DROP TABLE IF EXISTS documents')
-conn.execute('CREATE TABLE documents (id bigserial PRIMARY KEY, content text, embedding vector(384))')
+conn.execute('CREATE TABLE documents (id bigserial PRIMARY KEY, content text, embedding vector(1024))')
 
 # %%
-model = SentenceTransformer('multi-qa-MiniLM-L6-cos-v1')
+# model = SentenceTransformer('multi-qa-MiniLM-L6-cos-v1')
+model = SentenceTransformer("jinaai/jina-embeddings-v3", trust_remote_code=True)
 
 input = [
     'The dog is barking',
@@ -44,7 +45,14 @@ input = [
 ]
 
 # %%
-embeddings = model.encode(input)
+# embeddings = model.encode(input)
+
+task = "retrieval.query"
+embeddings = model.encode(
+    input,
+    task=task,
+    prompt_name=task,
+)
 
 # %%
 for content, embedding in zip(input, embeddings):
