@@ -29,7 +29,7 @@ dependencies = [
     "jax-metal==0.1.1",
     "lifelines",
     "scikit-survival",
-    #    "matlabengine==23.2.1",
+    "matlabengine==26.1.12",
     "flax",
     "blackjax",
     "optax",
