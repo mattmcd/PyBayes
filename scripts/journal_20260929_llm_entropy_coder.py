@@ -4,6 +4,7 @@ import mlx.core as mx
 from mlx_lm import load
 from mlx_lm.models.cache import make_prompt_cache
 import gc
+from typing import Optional, Callable
 
 # Benchmark for comparison
 import bz2
@@ -11,6 +12,13 @@ import lzma
 import zlib
 import time
 
+from pathlib import Path
+
+
+def get_lovecraft(filename):
+    data_root = Path.home().resolve() / 'Work' / 'Data' / 'lovecraftcorpus'
+    with open(data_root / filename, 'r') as f:
+        return f.read()
 
 def benchmark_compression(original_text: str, llm_compressed_bytes: bytes):
     raw_bytes = original_text.encode("utf-8")
@@ -64,6 +72,24 @@ class MLXCoder:
         print(f"Loading {model_id}...")
         self.model, self.tokenizer = load(model_id)
         self.bos_token_id = getattr(self.tokenizer, "bos_token_id", None) or 1
+        self._compiled_step_fn : Optional[Callable] = None
+
+    def _make_step_fn(self, cache):
+        """Creates an mx.compile-fused step function bound to the active KV cache.
+
+        Explicitly registering `inputs=cache` and `outputs=cache` enables
+        Metal kernel fusion across layers without graph re-tracing stalls.
+        """
+
+        def _step(token_id_arr):
+            out = self.model(token_id_arr, cache=cache)
+            # # Return the last-step logits squeezed
+            # return out[0, -1]
+            # Do NOT slice here: return the raw output so shapes match self.model(...)
+            return out
+
+        # Compile the graph targeting Metal kernel fusion
+        self._compiled_step_fn = mx.compile(_step, inputs=cache, outputs=cache)
 
     def close(self):
         """Explicitly release model weights, tokenizer, and pooled Metal buffers."""
@@ -268,7 +294,10 @@ class MLXArithmeticCoder(MLXCoder):
 
     def _next_logits(self, token_id: int, cache) -> np.ndarray:
         inp = mx.array([[token_id]])
-        out = self.model(inp, cache=cache)
+        if self._compiled_step_fn is not None:
+            out = self._compiled_step_fn(inp)
+        else:
+            out = self.model(inp, cache=cache)
         mx.eval(out)
         # Squeeze batch & sequence dim: [vocab_size]
         # Squeeze and cast to float32 BEFORE passing across the buffer boundary
@@ -283,6 +312,7 @@ class MLXArithmeticCoder(MLXCoder):
 
         encoder = ArithmeticEncoder()
         cache = make_prompt_cache(self.model)
+        # self._make_step_fn(cache)
         current_token = self.bos_token_id
 
         for target_token in tokens:
@@ -309,6 +339,7 @@ class MLXArithmeticCoder(MLXCoder):
 
         decoder = ArithmeticDecoder(bitstream)
         cache = make_prompt_cache(self.model)
+        # self._make_step_fn(cache)
         current_token = self.bos_token_id
         decoded_tokens = []
 
@@ -624,7 +655,7 @@ class EscapeRANSCoder:
 
 
 def build_adaptive_distribution(
-        logits_mlx: mx.array, top_k: int = 1024, m_bits: int = 14
+        logits_mlx: mx.array, top_k: int = 2048, m_bits: int = 14
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, int]:
     """Constructs a localized CDF table for the Top-K tokens plus an ESCAPE symbol.
 
@@ -674,16 +705,15 @@ def build_adaptive_distribution(
 # =====================================================================
 
 
-class MLXEscapeRANSCoder:
+class MLXEscapeRANSCoder(MLXCoder):
 
     def __init__(
             self,
             model_id: str = "mlx-community/LFM2.5-1.2B-Instruct-4bit",
-            top_k: int = 1024,
+            top_k: int = 4096,
     ):
+        super().__init__(model_id)
         print(f"Loading {model_id}...")
-        self.model, self.tokenizer = load(model_id)
-        self.bos_token_id = getattr(self.tokenizer, "bos_token_id", None) or 1
         self.top_k = top_k
         self.vocab_size = self.tokenizer.vocab_size
         # Number of bits needed to store raw literal token ID
@@ -691,7 +721,10 @@ class MLXEscapeRANSCoder:
 
     def _next_logits(self, token_id: int, cache) -> mx.array:
         inp = mx.array([[token_id]])
-        out = self.model(inp, cache=cache)
+        if self._compiled_step_fn is not None:
+            out = self._compiled_step_fn(inp)
+        else:
+            out = self.model(inp, cache=cache)
         mx.eval(out)
         return out[0, -1]
 
@@ -707,6 +740,7 @@ class MLXEscapeRANSCoder:
         )
 
         cache = make_prompt_cache(self.model)
+        # self._make_step_fn(cache)
         current_token = self.bos_token_id
 
         # List of (start_freq, freq, raw_literal_or_None, raw_bits)
@@ -763,6 +797,7 @@ class MLXEscapeRANSCoder:
         word_idx = 0
 
         cache = make_prompt_cache(self.model)
+        # self._make_step_fn(cache)
         current_token = self.bos_token_id
         decoded_tokens = []
 
@@ -798,20 +833,6 @@ class MLXEscapeRANSCoder:
 
         return self.tokenizer.decode(decoded_tokens, skip_special_tokens=True)
 
-    def close(self):
-        self.model = None
-        self.tokenizer = None
-        gc.collect()
-        if mx.metal.is_available():
-            mx.metal.clear_cache()
-            mx.metal.reset_peak_memory()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-
 
 # =====================================================================
 # 3. Demonstration & Round-Trip Verification
@@ -829,15 +850,21 @@ if __name__ == "__main__":
     compressor = MLXEscapeRANSCoder(model_name)
     print_memory_usage()
 
-    test_text = (
-        "Entropy coding replaces next-token sampling with deterministic interval contraction. "
-        "Because decompression mirrors the exact probability brackets produced by the autoregressive model, "
-        "the recovered text is identical to the original input. Autoregressive neural networks make "
-        "exceptionally strong compressors because their world model assigns high probabilities to "
-        "plausible syntactic and semantic structures, directly minimizing cross-entropy loss."
-    )
-    with open(__file__, "r", encoding="utf-8") as f:
-        test_text = f.read()
+    text_choice = 'dunwich.txt'
+
+    if text_choice == 'test':
+        test_text = (
+            "Entropy coding replaces next-token sampling with deterministic interval contraction. "
+            "Because decompression mirrors the exact probability brackets produced by the autoregressive model, "
+            "the recovered text is identical to the original input. Autoregressive neural networks make "
+            "exceptionally strong compressors because their world model assigns high probabilities to "
+            "plausible syntactic and semantic structures, directly minimizing cross-entropy loss."
+        )
+    elif text_choice == 'source':
+        with open(__file__, "r", encoding="utf-8") as f:
+            test_text = f.read()
+    else:
+        test_text = get_lovecraft(text_choice)
 
     print("\n--- Starting Compression ---")
     start_time_compress = time.time()
