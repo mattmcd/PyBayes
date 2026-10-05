@@ -1,0 +1,563 @@
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Fetching 8 files: 100%|██████████| 8/8 [00:00<00:00, 2926.17it/s]
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Forward pass over 5831 tokens...
+  Token 5831/5831
+Executing backward rANS pass...
+Original Text Length   : 19516 bytes
+Compressed Size (Total): 1828 bytes (incl. 4-byte header)
+Compression Ratio      : 9.37%
+Time Taken to Compress : 70.80 seconds
+--- Starting Decompression ---
+Forward rANS decompression for 5831 tokens...
+  Decoded 5831/5831
+Time Taken to Decompress: 81.40 seconds
+mx.metal.clear_cache is deprecated and will be removed in a future version. Use mx.clear_cache instead.
+mx.metal.reset_peak_memory is deprecated and will be removed in a future version. Use mx.reset_peak_memory instead.
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    19516 |   100.00% |         8.00
+zlib (Deflate - 9)         |     5514 |    28.25% |         2.26
+bz2 (Burrows-Wheeler - 9)  |     5443 |    27.89% |         2.23
+lzma (XZ - 9)              |     5396 |    27.65% |         2.21
+LLM + Arithmetic Coder     |     1828 |     9.37% |         0.75
+======================================================================
+
+Swtich to RANSCoder
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Fetching 8 files: 100%|██████████| 8/8 [00:00<00:00, 2079.09it/s]
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 8770 tokens...
+  Step 8770/8770 (Escapes: 57)
+Executing rANS backward pass... (Escape rate: 0.65%)
+Original Text Length   : 28729 bytes
+Compressed Size (Total): 2160 bytes (incl. 4-byte header)
+Compression Ratio      : 7.52%
+Time Taken to Compress : 100.53 seconds
+--- Starting Decompression ---
+Decompressing 8770 tokens with Forward Escape-rANS...
+  Decoded 8770/8770
+Time Taken to Decompress: 98.26 seconds
+mx.metal.clear_cache is deprecated and will be removed in a future version. Use mx.clear_cache instead.
+mx.metal.reset_peak_memory is deprecated and will be removed in a future version. Use mx.reset_peak_memory instead.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    28729 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7197 |    25.05% |         2.00
+bz2 (Burrows-Wheeler - 9)  |     7135 |    24.84% |         1.99
+lzma (XZ - 9)              |     6972 |    24.27% |         1.94
+LLM + Arithmetic Coder     |     2160 |     7.52% |         0.60
+======================================================================
+
+Switch to EscapeRANSCoder
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Fetching 8 files: 100%|██████████| 8/8 [00:00<00:00, 2255.31it/s]
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Forward pass over 8770 tokens...
+  Token 8770/8770
+Executing backward rANS pass...
+Original Text Length   : 28729 bytes
+Compressed Size (Total): 2500 bytes (incl. 4-byte header)
+Compression Ratio      : 8.70%
+Time Taken to Compress : 130.15 seconds
+--- Starting Decompression ---
+Forward rANS decompression for 8770 tokens...
+  Decoded 8770/8770
+Time Taken to Decompress: 128.06 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    28729 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7199 |    25.06% |         2.00
+bz2 (Burrows-Wheeler - 9)  |     7138 |    24.85% |         1.99
+lzma (XZ - 9)              |     6972 |    24.27% |         1.94
+LLM + Arithmetic Coder     |     2500 |     8.70% |         0.70
+======================================================================
+
+EscapeRANSCoder
+Loading mlx-community/Qwen3-0.6B-4bit...
+Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 2002.69it/s]
+Active Metal Memory: 319.8 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 7418 tokens...
+  Step 7418/7418 (Escapes: 54)
+Executing rANS backward pass... (Escape rate: 0.73%)
+Original Text Length   : 28729 bytes
+Compressed Size (Total): 1832 bytes (incl. 4-byte header)
+Compression Ratio      : 6.38%
+Time Taken to Compress : 110.27 seconds
+--- Starting Decompression ---
+Decompressing 7418 tokens with Forward Escape-rANS...
+  Decoded 7418/7418
+Time Taken to Decompress: 111.90 seconds
+mx.metal.clear_cache is deprecated and will be removed in a future version. Use mx.clear_cache instead.
+mx.metal.reset_peak_memory is deprecated and will be removed in a future version. Use mx.reset_peak_memory instead.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    28729 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7201 |    25.07% |         2.01
+bz2 (Burrows-Wheeler - 9)  |     7128 |    24.81% |         1.98
+lzma (XZ - 9)              |     6972 |    24.27% |         1.94
+LLM + Arithmetic Coder     |     1832 |     6.38% |         0.51
+======================================================================
+
+Loading mlx-community/Qwen3-0.6B-4bit...
+Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 2190.87it/s]
+Loading mlx-community/Qwen3-0.6B-4bit...
+Active Metal Memory: 319.8 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 7515 tokens...
+  Step 7515/7515 (Escapes: 60)
+Executing rANS backward pass... (Escape rate: 0.80%)
+Original Text Length   : 30809 bytes
+Compressed Size (Total): 1896 bytes (incl. 4-byte header)
+Compression Ratio      : 6.15%
+Time Taken to Compress : 132.99 seconds
+--- Starting Decompression ---
+Decompressing 7515 tokens with Forward Escape-rANS...
+  Decoded 7515/7515
+Time Taken to Decompress: 131.00 seconds
+mx.metal.clear_cache is deprecated and will be removed in a future version. Use mx.clear_cache instead.
+mx.metal.reset_peak_memory is deprecated and will be removed in a future version. Use mx.reset_peak_memory instead.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    30809 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7373 |    23.93% |         1.91
+bz2 (Burrows-Wheeler - 9)  |     7223 |    23.44% |         1.88
+lzma (XZ - 9)              |     7140 |    23.18% |         1.85
+LLM + Arithmetic Coder     |     1896 |     6.15% |         0.49
+======================================================================
+
+Trying compiling forward step: fails because cache not updated
+Loading mlx-community/Qwen3-0.6B-4bit...
+Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 1799.96it/s]
+Loading mlx-community/Qwen3-0.6B-4bit...
+Active Metal Memory: 319.8 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 7644 tokens...
+  Step 7644/7644 (Escapes: 4198)
+Executing rANS backward pass... (Escape rate: 54.92%)
+Original Text Length   : 31396 bytes
+Compressed Size (Total): 14672 bytes (incl. 4-byte header)
+Compression Ratio      : 46.73%
+Time Taken to Compress : 76.27 seconds
+--- Starting Decompression ---
+Decompressing 7644 tokens with Forward Escape-rANS...
+  Decoded 7644/7644
+Time Taken to Decompress: 81.69 seconds
+mx.metal.clear_cache is deprecated and will be removed in a future version. Use mx.clear_cache instead.
+mx.metal.reset_peak_memory is deprecated and will be removed in a future version. Use mx.reset_peak_memory instead.
+Active Metal Memory: 319.8 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    31396 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7497 |    23.88% |         1.91
+bz2 (Burrows-Wheeler - 9)  |     7347 |    23.40% |         1.87
+lzma (XZ - 9)              |     7256 |    23.11% |         1.85
+LLM + Arithmetic Coder     |    14672 |    46.73% |         3.74
+======================================================================
+
+Loading mlx-community/Qwen3-0.6B-4bit...
+Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 2000.04it/s]
+Loading mlx-community/Qwen3-0.6B-4bit...
+Active Metal Memory: 319.8 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 7646 tokens...
+  Step 7646/7646 (Escapes: 59)
+Executing rANS backward pass... (Escape rate: 0.77%)
+Original Text Length   : 31400 bytes
+Compressed Size (Total): 1932 bytes (incl. 4-byte header)
+Compression Ratio      : 6.15%
+Time Taken to Compress : 137.62 seconds
+--- Starting Decompression ---
+Decompressing 7646 tokens with Forward Escape-rANS...
+  Decoded 7646/7646
+Time Taken to Decompress: 126.91 seconds
+mx.metal.clear_cache is deprecated and will be removed in a future version. Use mx.clear_cache instead.
+mx.metal.reset_peak_memory is deprecated and will be removed in a future version. Use mx.reset_peak_memory instead.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    31400 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7503 |    23.89% |         1.91
+bz2 (Burrows-Wheeler - 9)  |     7369 |    23.47% |         1.88
+lzma (XZ - 9)              |     7260 |    23.12% |         1.85
+LLM + Arithmetic Coder     |     1932 |     6.15% |         0.49
+======================================================================
+
+Loading mlx-community/Qwen3.5-4B-MLX-4bit...
+Fetching 10 files: 100%|██████████| 10/10 [00:00<00:00, 5521.73it/s]
+Loading mlx-community/Qwen3.5-4B-MLX-4bit...
+Active Metal Memory: 2257.9 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 8051 tokens...
+  Step 8051/8051 (Escapes: 61)
+Executing rANS backward pass... (Escape rate: 0.76%)
+Original Text Length   : 31074 bytes
+Compressed Size (Total): 1604 bytes (incl. 4-byte header)
+Compression Ratio      : 5.16%
+Time Taken to Compress : 352.12 seconds
+--- Starting Decompression ---
+Decompressing 8051 tokens with Forward Escape-rANS...
+  Decoded 8051/8051
+Time Taken to Decompress: 354.46 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    31074 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7465 |    24.02% |         1.92
+bz2 (Burrows-Wheeler - 9)  |     7306 |    23.51% |         1.88
+lzma (XZ - 9)              |     7232 |    23.27% |         1.86
+LLM + Arithmetic Coder     |     1604 |     5.16% |         0.41
+======================================================================
+
+Switch to dunwich.txt
+Loading mlx-community/Qwen3-0.6B-4bit...
+Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 2166.23it/s]
+Loading mlx-community/Qwen3-0.6B-4bit...
+Active Metal Memory: 319.8 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 22922 tokens...
+  Step 22922/22922 (Escapes: 1568)
+Executing rANS backward pass... (Escape rate: 6.84%)
+Original Text Length   : 100564 bytes
+Compressed Size (Total): 18316 bytes (incl. 4-byte header)
+Compression Ratio      : 18.21%
+Time Taken to Compress : 688.30 seconds
+--- Starting Decompression ---
+Decompressing 22922 tokens with Forward Escape-rANS...
+  Decoded 22922/22922
+Time Taken to Decompress: 719.13 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |   100564 |   100.00% |         8.00
+zlib (Deflate - 9)         |    40106 |    39.88% |         3.19
+bz2 (Burrows-Wheeler - 9)  |    33797 |    33.61% |         2.69
+lzma (XZ - 9)              |    36956 |    36.75% |         2.94
+LLM + Arithmetic Coder     |    18316 |    18.21% |         1.46
+======================================================================
+
+Increase top-k to 4096
+Loading mlx-community/Qwen3-0.6B-4bit...
+Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 2982.20it/s]
+Loading mlx-community/Qwen3-0.6B-4bit...
+Active Metal Memory: 319.8 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-4096 + Escape) for 22922 tokens...
+  Step 22922/22922 (Escapes: 512)
+Executing rANS backward pass... (Escape rate: 2.23%)
+Original Text Length   : 100564 bytes
+Compressed Size (Total): 18100 bytes (incl. 4-byte header)
+Compression Ratio      : 18.00%
+Time Taken to Compress : 678.99 seconds
+--- Starting Decompression ---
+Decompressing 22922 tokens with Forward Escape-rANS...
+  Decoded 22922/22922
+Time Taken to Decompress: 688.67 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |   100564 |   100.00% |         8.00
+zlib (Deflate - 9)         |    40106 |    39.88% |         3.19
+bz2 (Burrows-Wheeler - 9)  |    33797 |    33.61% |         2.69
+lzma (XZ - 9)              |    36956 |    36.75% |         2.94
+LLM + Arithmetic Coder     |    18100 |    18.00% |         1.44
+======================================================================
+
+# Try larger model
+rapid-mlx benchmark run qwen3.5-9b-4bit
+Saved local result 5cd470a1-7713-4134-a714-b9faa5ddd9fc
+  pp512-tg128         18.7 tok/s decode   TTFT   4490 ms   (5 rounds)
+  pp2048-tg512        17.1 tok/s decode   TTFT  20178 ms   (5 rounds)
+
+Loading mlx-community/Qwen3.5-9B-4bit...
+Fetching 11 files: 100%|██████████| 11/11 [00:00<00:00, 2265.19it/s]
+Loading mlx-community/Qwen3.5-9B-4bit...
+Active Metal Memory: 4804.7 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-4096 + Escape) for 23005 tokens...
+  Step 23005/23005 (Escapes: 123)
+Executing rANS backward pass... (Escape rate: 0.53%)
+Original Text Length   : 100564 bytes
+Compressed Size (Total): 13276 bytes (incl. 4-byte header)
+Compression Ratio      : 13.20%
+Time Taken to Compress : 1729.26 seconds
+
+# => 1.06 Bits/Char
+
+(canceled decompression step to save time)
+
+
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-4096 + Escape) for 23850 tokens...
+  Step 23850/23850 (Escapes: 246)
+Executing rANS backward pass... (Escape rate: 1.03%)
+Original Text Length   : 100564 bytes
+Compressed Size (Total): 16752 bytes (incl. 4-byte header)
+Compression Ratio      : 16.66%
+Time Taken to Compress : 515.46 seconds
+--- Starting Decompression ---
+Decompressing 23850 tokens with Forward Escape-rANS...
+  Decoded 23850/23850
+Time Taken to Decompress: 514.73 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |   100564 |   100.00% |         8.00
+zlib (Deflate - 9)         |    40106 |    39.88% |         3.19
+bz2 (Burrows-Wheeler - 9)  |    33797 |    33.61% |         2.69
+lzma (XZ - 9)              |    36956 |    36.75% |         2.94
+LLM + Arithmetic Coder     |    16752 |    16.66% |         1.33
+======================================================================
+
+Back to source code:
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-4096 + Escape) for 9118 tokens...
+  Step 9118/9118 (Escapes: 22)
+Executing rANS backward pass... (Escape rate: 0.24%)
+Original Text Length   : 31529 bytes
+Compressed Size (Total): 2740 bytes (incl. 4-byte header)
+Compression Ratio      : 8.69%
+Time Taken to Compress : 103.13 seconds
+--- Starting Decompression ---
+Decompressing 9118 tokens with Forward Escape-rANS...
+  Decoded 9118/9118
+Time Taken to Decompress: 105.27 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    31529 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7636 |    24.22% |         1.94
+bz2 (Burrows-Wheeler - 9)  |     7502 |    23.79% |         1.90
+lzma (XZ - 9)              |     7384 |    23.42% |         1.87
+LLM + Arithmetic Coder     |     2740 |     8.69% |         0.70
+======================================================================
+
+Try reducing top-k to 512
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-512 + Escape) for 9117 tokens...
+  Step 9117/9117 (Escapes: 127)
+Executing rANS backward pass... (Escape rate: 1.39%)
+Original Text Length   : 31528 bytes
+Compressed Size (Total): 2436 bytes (incl. 4-byte header)
+Compression Ratio      : 7.73%
+Time Taken to Compress : 137.33 seconds
+--- Starting Decompression ---
+Decompressing 9117 tokens with Forward Escape-rANS...
+  Decoded 9117/9117
+Time Taken to Decompress: 142.67 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    31528 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7635 |    24.22% |         1.94
+bz2 (Burrows-Wheeler - 9)  |     7487 |    23.75% |         1.90
+lzma (XZ - 9)              |     7384 |    23.42% |         1.87
+LLM + Arithmetic Coder     |     2436 |     7.73% |         0.62
+======================================================================
+
+Top-k 1024
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 9118 tokens...
+  Step 9118/9118 (Escapes: 75)
+Executing rANS backward pass... (Escape rate: 0.82%)
+Original Text Length   : 31529 bytes
+Compressed Size (Total): 2444 bytes (incl. 4-byte header)
+Compression Ratio      : 7.75%
+Time Taken to Compress : 131.52 seconds
+--- Starting Decompression ---
+Decompressing 9118 tokens with Forward Escape-rANS...
+  Decoded 9118/9118
+Time Taken to Decompress: 140.17 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    31529 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7634 |    24.21% |         1.94
+bz2 (Burrows-Wheeler - 9)  |     7482 |    23.73% |         1.90
+lzma (XZ - 9)              |     7384 |    23.42% |         1.87
+LLM + Arithmetic Coder     |     2444 |     7.75% |         0.62
+======================================================================
+
+Top-k 1024 back to dunwich.txt
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 23850 tokens...
+  Step 23850/23850 (Escapes: 1005)
+Executing rANS backward pass... (Escape rate: 4.21%)
+Original Text Length   : 100564 bytes
+Compressed Size (Total): 16464 bytes (incl. 4-byte header)
+Compression Ratio      : 16.37%
+Time Taken to Compress : 415.63 seconds
+--- Starting Decompression ---
+Decompressing 23850 tokens with Forward Escape-rANS...
+  Decoded 23850/23850
+Time Taken to Decompress: 447.75 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |   100564 |   100.00% |         8.00
+zlib (Deflate - 9)         |    40106 |    39.88% |         3.19
+bz2 (Burrows-Wheeler - 9)  |    33797 |    33.61% |         2.69
+lzma (XZ - 9)              |    36956 |    36.75% |         2.94
+LLM + Arithmetic Coder     |    16464 |    16.37% |         1.31
+======================================================================
+
+
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 14281 tokens...
+  Step 14281/14281 (Escapes: 584)
+Executing rANS backward pass... (Escape rate: 4.09%)
+Original Text Length   : 63107 bytes
+Compressed Size (Total): 9756 bytes (incl. 4-byte header)
+Compression Ratio      : 15.46%
+Time Taken to Compress : 241.53 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    63107 |   100.00% |         8.00
+zlib (Deflate - 9)         |    25673 |    40.68% |         3.25
+bz2 (Burrows-Wheeler - 9)  |    22078 |    34.99% |         2.80
+lzma (XZ - 9)              |    24088 |    38.17% |         3.05
+LLM + Escape Rans          |     9756 |    15.46% |         1.24
+======================================================================
+run(model_name, compressor_type, 'haunter.txt', do_decompress)
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Fetching 8 files: 100%|██████████| 8/8 [00:00<00:00, 2263.67it/s]
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 12195 tokens...
+  Step 12195/12195 (Escapes: 422)
+Executing rANS backward pass... (Escape rate: 3.46%)
+Original Text Length   : 54268 bytes
+Compressed Size (Total): 8144 bytes (incl. 4-byte header)
+Compression Ratio      : 15.01%
+Time Taken to Compress : 217.92 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    54268 |   100.00% |         8.00
+zlib (Deflate - 9)         |    22223 |    40.95% |         3.28
+bz2 (Burrows-Wheeler - 9)  |    19144 |    35.28% |         2.82
+lzma (XZ - 9)              |    20840 |    38.40% |         3.07
+LLM + Escape Rans          |     8144 |    15.01% |         1.20
+======================================================================
+run(model_name, compressor_type, 'dreams_in_the_witch.txt', do_decompress)
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Fetching 8 files: 100%|██████████| 8/8 [00:00<00:00, 2986.33it/s]
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 19433 tokens...
+  Step 19433/19433 (Escapes: 664)
+Executing rANS backward pass... (Escape rate: 3.42%)
+Original Text Length   : 86782 bytes
+Compressed Size (Total): 12364 bytes (incl. 4-byte header)
+Compression Ratio      : 14.25%
+Time Taken to Compress : 328.55 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    86782 |   100.00% |         8.00
+zlib (Deflate - 9)         |    33236 |    38.30% |         3.06
+bz2 (Burrows-Wheeler - 9)  |    27657 |    31.87% |         2.55
+lzma (XZ - 9)              |    30480 |    35.12% |         2.81
+LLM + Escape Rans          |    12364 |    14.25% |         1.14
+======================================================================
