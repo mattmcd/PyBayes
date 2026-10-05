@@ -1,6 +1,7 @@
 import struct
 import numpy as np
 import mlx.core as mx
+from ipywidgets import comm
 from mlx_lm import load
 from mlx_lm.models.cache import make_prompt_cache
 import gc
@@ -20,7 +21,34 @@ def get_lovecraft(filename):
     with open(data_root / filename, 'r') as f:
         return f.read()
 
-def benchmark_compression(original_text: str, llm_compressed_bytes: bytes):
+
+def put_compressed_lovecraft(compressed = None, source_file = None):
+    if compressed is None:
+        text = get_lovecraft(source_file)
+        model_name = 'mlx-community/LFM2.5-1.2B-Instruct-4bit'
+        compressor =MLXEscapeRANSCoder(model_name)
+        compressed = compressor.compress(text)
+
+    out_dir = Path(__file__).resolve().parent / 'cache_data'
+    if not out_dir.is_dir():
+        out_dir.mkdir()
+    out_file = out_dir / f'{source_file}.llm'
+    with open(out_file, 'wb') as f:
+        f.write(compressed)
+
+
+def get_compressed_lovecraft(source_file):
+    out_dir = Path(__file__).resolve().parent / 'cache_data'
+    out_file = out_dir / f'{source_file}.llm'
+    with open(out_file, 'rb') as f:
+        compressed_bytes = f.read()
+    model_name = 'mlx-community/LFM2.5-1.2B-Instruct-4bit'
+    compressor =MLXEscapeRANSCoder(model_name)
+    text = compressor.decompress(compressed_bytes)
+    return text
+
+
+def benchmark_compression(original_text: str, llm_compressed_bytes: bytes, compressor_type: str):
     raw_bytes = original_text.encode("utf-8")
     raw_size = len(raw_bytes)
 
@@ -28,6 +56,8 @@ def benchmark_compression(original_text: str, llm_compressed_bytes: bytes):
     zlib_compressed = zlib.compress(raw_bytes, level=9)
     bz2_compressed = bz2.compress(raw_bytes, compresslevel=9)
     lzma_compressed = lzma.compress(raw_bytes, preset=9)
+
+    compressor_type = compressor_type.replace('_', ' ').title()
 
     results = [
         ("Raw UTF-8", raw_size, 1.0, 8.0),
@@ -50,7 +80,7 @@ def benchmark_compression(original_text: str, llm_compressed_bytes: bytes):
             (len(lzma_compressed) * 8) / len(original_text),
         ),
         (
-            "LLM + Arithmetic Coder",
+            f"LLM + {compressor_type}",
             len(llm_compressed_bytes),
             len(llm_compressed_bytes) / raw_size,
             (len(llm_compressed_bytes) * 8) / len(original_text),
@@ -710,7 +740,7 @@ class MLXEscapeRANSCoder(MLXCoder):
     def __init__(
             self,
             model_id: str = "mlx-community/LFM2.5-1.2B-Instruct-4bit",
-            top_k: int = 4096,
+            top_k: int = 1024,
     ):
         super().__init__(model_id)
         print(f"Loading {model_id}...")
@@ -838,19 +868,18 @@ class MLXEscapeRANSCoder(MLXCoder):
 # 3. Demonstration & Round-Trip Verification
 # =====================================================================
 
-if __name__ == "__main__":
-    # Lightweight, fast model for testing
-    # model_name = 'mlx-community/LFM2.5-1.2B-Instruct-4bit'
-    model_name = 'mlx-community/Qwen3-0.6B-4bit'
-    # model_name = 'rapid-mlx/Ling-3.0-tiny-MLX-4bit' # ValueError: Model type bailing_hybrid not supported.
-    # model_name = "mlx-community/Qwen3.5-4B-MLX-4bit"
-    # compressor = MLXArithmeticCoder("mlx-community/Qwen2.5-0.5B-Instruct-4bit")
-    # compressor = MLXArithmeticCoder(model_name)
-    # compressor = MLXRANSCoder(model_name)
-    compressor = MLXEscapeRANSCoder(model_name)
-    print_memory_usage()
 
-    text_choice = 'dunwich.txt'
+def run(model_name, compressor_type='escape_rans', text_choice='mountains_of_madness.txt', do_decompress=False):
+    if compressor_type == 'arithmetic':
+        compressor = MLXArithmeticCoder(model_name)
+    elif compressor_type == 'rans':
+        compressor = MLXRANSCoder(model_name)
+    elif compressor_type == 'escape_rans':
+        compressor = MLXEscapeRANSCoder(model_name)
+    else:
+        raise ValueError(f"Invalid compressor type: {compressor_type}")
+
+    print_memory_usage()
 
     if text_choice == 'test':
         test_text = (
@@ -875,12 +904,19 @@ if __name__ == "__main__":
     print(f"Compressed Size (Total): {len(compressed)} bytes (incl. 4-byte header)")
     print(f"Compression Ratio      : {len(compressed) / len(raw_bytes):.2%}")
     print(f"Time Taken to Compress : {end_time_compress - start_time_compress:.2f} seconds")
-    print("\n--- Starting Decompression ---")
 
-    start_time_decompress = time.time()
-    restored_text = compressor.decompress(compressed)
-    end_time_decompress = time.time()
-    print(f"Time Taken to Decompress: {end_time_decompress - start_time_decompress:.2f} seconds")
+    if do_decompress:
+        print("\n--- Starting Decompression ---")
+
+        start_time_decompress = time.time()
+        restored_text = compressor.decompress(compressed)
+        end_time_decompress = time.time()
+        print(f"Time Taken to Decompress: {end_time_decompress - start_time_decompress:.2f} seconds")
+
+        print(f"Matches Original: {restored_text == test_text}")
+        # if restored_text != test_text:
+        #     print("\nOriginal Text:\n", test_text)
+        #     print("\nDecoded Output:\n", restored_text)
 
     # Clean up and reclaim VRAM/unified memory
     compressor.close()
@@ -888,10 +924,22 @@ if __name__ == "__main__":
 
     print_memory_usage()
 
-    print(f"Matches Original: {restored_text == test_text}")
-    if restored_text != test_text:
-        print("\nOriginal Text:\n", test_text)
-        print("\nDecoded Output:\n", restored_text)
-
     # Run side-by-side benchmark
-    benchmark_compression(test_text, compressed)
+    benchmark_compression(test_text, compressed, compressor_type)
+
+if __name__ == "__main__":
+    # Lightweight, fast model for testing
+    model_name = 'mlx-community/LFM2.5-1.2B-Instruct-4bit'
+    # model_name = 'mlx-community/Qwen3-0.6B-4bit'
+    # model_name = 'mlx-community/Qwen3.5-9B-4bit'
+    # model_name = 'mlx-community/gemma-4-e2b-it-4bit'
+    # model_name = 'rapid-mlx/Ling-3.0-tiny-MLX-4bit' # ValueError: Model type bailing_hybrid not supported.
+    # model_name = "mlx-community/Qwen3.5-4B-MLX-4bit"
+    # compressor = MLXArithmeticCoder("mlx-community/Qwen2.5-0.5B-Instruct-4bit")
+    # compressor = MLXArithmeticCoder(model_name)
+    # compressor = MLXRANSCoder(model_name)
+
+    compressor_type = 'escape_rans'
+    text_choice = 'pharoahs.txt' # 'mountains_of_madness.txt' # 'dunwich.txt' #  'source'
+    do_decompress = False
+    run(model_name, compressor_type, text_choice, do_decompress)

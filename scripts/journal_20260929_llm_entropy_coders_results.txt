@@ -62,7 +62,7 @@ lzma (XZ - 9)              |     6972 |    24.27% |         1.94
 LLM + Arithmetic Coder     |     2160 |     7.52% |         0.60
 ======================================================================
 
-Swtich to EscapeRANSCoder
+Switch to EscapeRANSCoder
 Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
 Fetching 8 files: 100%|██████████| 8/8 [00:00<00:00, 2255.31it/s]
 Active Metal Memory: 628.0 MB
@@ -315,4 +315,249 @@ zlib (Deflate - 9)         |    40106 |    39.88% |         3.19
 bz2 (Burrows-Wheeler - 9)  |    33797 |    33.61% |         2.69
 lzma (XZ - 9)              |    36956 |    36.75% |         2.94
 LLM + Arithmetic Coder     |    18100 |    18.00% |         1.44
+======================================================================
+
+# Try larger model
+rapid-mlx benchmark run qwen3.5-9b-4bit
+Saved local result 5cd470a1-7713-4134-a714-b9faa5ddd9fc
+  pp512-tg128         18.7 tok/s decode   TTFT   4490 ms   (5 rounds)
+  pp2048-tg512        17.1 tok/s decode   TTFT  20178 ms   (5 rounds)
+
+Loading mlx-community/Qwen3.5-9B-4bit...
+Fetching 11 files: 100%|██████████| 11/11 [00:00<00:00, 2265.19it/s]
+Loading mlx-community/Qwen3.5-9B-4bit...
+Active Metal Memory: 4804.7 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-4096 + Escape) for 23005 tokens...
+  Step 23005/23005 (Escapes: 123)
+Executing rANS backward pass... (Escape rate: 0.53%)
+Original Text Length   : 100564 bytes
+Compressed Size (Total): 13276 bytes (incl. 4-byte header)
+Compression Ratio      : 13.20%
+Time Taken to Compress : 1729.26 seconds
+
+# => 1.06 Bits/Char
+
+(canceled decompression step to save time)
+
+
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-4096 + Escape) for 23850 tokens...
+  Step 23850/23850 (Escapes: 246)
+Executing rANS backward pass... (Escape rate: 1.03%)
+Original Text Length   : 100564 bytes
+Compressed Size (Total): 16752 bytes (incl. 4-byte header)
+Compression Ratio      : 16.66%
+Time Taken to Compress : 515.46 seconds
+--- Starting Decompression ---
+Decompressing 23850 tokens with Forward Escape-rANS...
+  Decoded 23850/23850
+Time Taken to Decompress: 514.73 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |   100564 |   100.00% |         8.00
+zlib (Deflate - 9)         |    40106 |    39.88% |         3.19
+bz2 (Burrows-Wheeler - 9)  |    33797 |    33.61% |         2.69
+lzma (XZ - 9)              |    36956 |    36.75% |         2.94
+LLM + Arithmetic Coder     |    16752 |    16.66% |         1.33
+======================================================================
+
+Back to source code:
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-4096 + Escape) for 9118 tokens...
+  Step 9118/9118 (Escapes: 22)
+Executing rANS backward pass... (Escape rate: 0.24%)
+Original Text Length   : 31529 bytes
+Compressed Size (Total): 2740 bytes (incl. 4-byte header)
+Compression Ratio      : 8.69%
+Time Taken to Compress : 103.13 seconds
+--- Starting Decompression ---
+Decompressing 9118 tokens with Forward Escape-rANS...
+  Decoded 9118/9118
+Time Taken to Decompress: 105.27 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    31529 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7636 |    24.22% |         1.94
+bz2 (Burrows-Wheeler - 9)  |     7502 |    23.79% |         1.90
+lzma (XZ - 9)              |     7384 |    23.42% |         1.87
+LLM + Arithmetic Coder     |     2740 |     8.69% |         0.70
+======================================================================
+
+Try reducing top-k to 512
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-512 + Escape) for 9117 tokens...
+  Step 9117/9117 (Escapes: 127)
+Executing rANS backward pass... (Escape rate: 1.39%)
+Original Text Length   : 31528 bytes
+Compressed Size (Total): 2436 bytes (incl. 4-byte header)
+Compression Ratio      : 7.73%
+Time Taken to Compress : 137.33 seconds
+--- Starting Decompression ---
+Decompressing 9117 tokens with Forward Escape-rANS...
+  Decoded 9117/9117
+Time Taken to Decompress: 142.67 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    31528 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7635 |    24.22% |         1.94
+bz2 (Burrows-Wheeler - 9)  |     7487 |    23.75% |         1.90
+lzma (XZ - 9)              |     7384 |    23.42% |         1.87
+LLM + Arithmetic Coder     |     2436 |     7.73% |         0.62
+======================================================================
+
+Top-k 1024
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 9118 tokens...
+  Step 9118/9118 (Escapes: 75)
+Executing rANS backward pass... (Escape rate: 0.82%)
+Original Text Length   : 31529 bytes
+Compressed Size (Total): 2444 bytes (incl. 4-byte header)
+Compression Ratio      : 7.75%
+Time Taken to Compress : 131.52 seconds
+--- Starting Decompression ---
+Decompressing 9118 tokens with Forward Escape-rANS...
+  Decoded 9118/9118
+Time Taken to Decompress: 140.17 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    31529 |   100.00% |         8.00
+zlib (Deflate - 9)         |     7634 |    24.21% |         1.94
+bz2 (Burrows-Wheeler - 9)  |     7482 |    23.73% |         1.90
+lzma (XZ - 9)              |     7384 |    23.42% |         1.87
+LLM + Arithmetic Coder     |     2444 |     7.75% |         0.62
+======================================================================
+
+Top-k 1024 back to dunwich.txt
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Active Metal Memory: 628.0 MB
+Cache Metal Memory : 0.0 MB
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 23850 tokens...
+  Step 23850/23850 (Escapes: 1005)
+Executing rANS backward pass... (Escape rate: 4.21%)
+Original Text Length   : 100564 bytes
+Compressed Size (Total): 16464 bytes (incl. 4-byte header)
+Compression Ratio      : 16.37%
+Time Taken to Compress : 415.63 seconds
+--- Starting Decompression ---
+Decompressing 23850 tokens with Forward Escape-rANS...
+  Decoded 23850/23850
+Time Taken to Decompress: 447.75 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+Matches Original: True
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |   100564 |   100.00% |         8.00
+zlib (Deflate - 9)         |    40106 |    39.88% |         3.19
+bz2 (Burrows-Wheeler - 9)  |    33797 |    33.61% |         2.69
+lzma (XZ - 9)              |    36956 |    36.75% |         2.94
+LLM + Arithmetic Coder     |    16464 |    16.37% |         1.31
+======================================================================
+
+
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 14281 tokens...
+  Step 14281/14281 (Escapes: 584)
+Executing rANS backward pass... (Escape rate: 4.09%)
+Original Text Length   : 63107 bytes
+Compressed Size (Total): 9756 bytes (incl. 4-byte header)
+Compression Ratio      : 15.46%
+Time Taken to Compress : 241.53 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    63107 |   100.00% |         8.00
+zlib (Deflate - 9)         |    25673 |    40.68% |         3.25
+bz2 (Burrows-Wheeler - 9)  |    22078 |    34.99% |         2.80
+lzma (XZ - 9)              |    24088 |    38.17% |         3.05
+LLM + Escape Rans          |     9756 |    15.46% |         1.24
+======================================================================
+run(model_name, compressor_type, 'haunter.txt', do_decompress)
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Fetching 8 files: 100%|██████████| 8/8 [00:00<00:00, 2263.67it/s]
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 12195 tokens...
+  Step 12195/12195 (Escapes: 422)
+Executing rANS backward pass... (Escape rate: 3.46%)
+Original Text Length   : 54268 bytes
+Compressed Size (Total): 8144 bytes (incl. 4-byte header)
+Compression Ratio      : 15.01%
+Time Taken to Compress : 217.92 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    54268 |   100.00% |         8.00
+zlib (Deflate - 9)         |    22223 |    40.95% |         3.28
+bz2 (Burrows-Wheeler - 9)  |    19144 |    35.28% |         2.82
+lzma (XZ - 9)              |    20840 |    38.40% |         3.07
+LLM + Escape Rans          |     8144 |    15.01% |         1.20
+======================================================================
+run(model_name, compressor_type, 'dreams_in_the_witch.txt', do_decompress)
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+Fetching 8 files: 100%|██████████| 8/8 [00:00<00:00, 2986.33it/s]
+Loading mlx-community/LFM2.5-1.2B-Instruct-4bit...
+--- Starting Compression ---
+Collecting distributions (Top-1024 + Escape) for 19433 tokens...
+  Step 19433/19433 (Escapes: 664)
+Executing rANS backward pass... (Escape rate: 3.42%)
+Original Text Length   : 86782 bytes
+Compressed Size (Total): 12364 bytes (incl. 4-byte header)
+Compression Ratio      : 14.25%
+Time Taken to Compress : 328.55 seconds
+Model unloaded and Metal cache cleared.
+Active Metal Memory: 0.0 MB
+Cache Metal Memory : 0.0 MB
+======================================================================
+Algorithm                  |    Bytes |      Ratio |  Bits / Char
+----------------------------------------------------------------------
+Raw UTF-8                  |    86782 |   100.00% |         8.00
+zlib (Deflate - 9)         |    33236 |    38.30% |         3.06
+bz2 (Burrows-Wheeler - 9)  |    27657 |    31.87% |         2.55
+lzma (XZ - 9)              |    30480 |    35.12% |         2.81
+LLM + Escape Rans          |    12364 |    14.25% |         1.14
 ======================================================================
