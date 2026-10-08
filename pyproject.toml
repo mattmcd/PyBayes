@@ -90,7 +90,8 @@ dependencies = [
     "tf-keras>=2.16.0",
     "pyrefly>=0.60.0",
     "torchcodec",
-    "peft"
+    "peft",
+    "tabicl>=2.2.0",
 ]
 
 [tool.uv]
