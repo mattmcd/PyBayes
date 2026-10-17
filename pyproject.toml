@@ -92,6 +92,7 @@ dependencies = [
     "torchcodec",
     "peft",
     "tabicl>=2.2.0",
+    "marimo>=0.25.1",
 ]
 
 [tool.uv]
